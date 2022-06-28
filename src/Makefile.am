@@ -32,6 +32,10 @@ if USEGADAP
 src_gadap = dodstn.c
 endif
 
+# if OPENGRADS
+src_udx = gaudx.c
+# endif
+
 if USEGUI
 src_gui = gagui.c gsgui.c
 endif
@@ -53,12 +57,13 @@ grads_SOURCES =	grads.c  gxsubs.c gxmeta.c  gxchpl.c gxcntr.c gxstrm.c gxdb.c \
 		gxwmap.c gxshad.c gxshad2.c gaexpr.c gafunc.c gautil.c gagx.c \
 		gscrpt.c gamach.c gatxt.c   galloc.c gaddes.c gacfg.c  gaio.c \
                 gauser.c gasdf.c  bufrstn.c gabufr.c gabufrtbl.c \
-                $(src_gui) $(src_gadap) 
+                $(src_gui) $(src_gadap) $(src_udx)
 
 ## These may not always be compiled but must be listed in order to go in the distribution 
 EXTRA_grads_SOURCES = gagmap.c gagui.c gsgui.c dodstn.c \
                       gxprintGD.c gxGD.c gxX11.c \
                       gxprint.c gxC.c gxX.c gxdummy.c 
+#                      gxprint.c gxC.c gxX.c gxdummy.c 
 
 
 ##---Header files---------------------------------------------------------------------
@@ -90,7 +95,7 @@ common_ldadd            = $(LDADD) $(host_ldadd)
 X11_ldadd               = $(X_LIBS) $(X_PRE_LIBS) -lX11 -lXext $(X_EXTRA_LIBS)
 
 
-AM_CPPFLAGS		= -I. -I$(supp_include_dir) $(gui_inc) $(nc_inc) \
+AM_CPPFLAGS		= -DOPENGRADS -I. -I$(supp_include_dir) $(gui_inc) $(nc_inc) \
 			  $(hdf_inc) $(hdf5_inc) $(geotiff_inc) $(shp_inc) $(gadap_inc) \
                           $(X_CFLAGS) $(XAW_CFLAGS) $(HDF4_CFLAGS) 
 
@@ -135,7 +140,7 @@ libgradspy_la_SOURCES  = grads.c gxsubs.c gxmeta.c  gxchpl.c gxcntr.c gxstrm.c g
 		gxwmap.c gxshad.c gxshad2.c gaexpr.c gafunc.c gautil.c gagx.c \
 		gscrpt.c gamach.c gatxt.c   galloc.c gaddes.c gacfg.c  gaio.c \
                 gauser.c gasdf.c  bufrstn.c gabufr.c gabufrtbl.c \
-                $(src_gui) $(src_gadap) 
+                $(src_gui) $(src_gadap) $(src_udx) 
 
 ## this object file needs to be recompiled for gradspy with the SHRDOBJ flag set 
 libgradspy_la-grads.o: $(srcdir)/grads.c

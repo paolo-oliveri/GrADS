@@ -48,24 +48,19 @@ void write_command_log(char *logfile);
 
 static struct gaupb *upba=NULL;     /* Anchor for user defined plug-in */
 char *gxgnam(char *);               /* This is also in gx.h */
-static struct gacmn gcmn;  
+struct gacmn gcmn;  
 static struct gawgds wgds; 
 extern struct gamfcmn mfcmn;
 
 /* * * * * * * * * * * * * * * * *
  * Here's where it all begins... *
  * * * * * * * * * * * * * * * * */
-#ifdef OPENGRADS
-/* For opengrads, which needs a capital M for its 'main' routine */
-int Main (int argc, char *argv[])  {
-#else
 #ifdef SHRDOBJ
 /* For the gradspy shared object, which can't have a 'main' routine */
 int gamain (int argc, char *argv[])  {  
 #else
 /* For the stand-alone grads exectuable */
 int main (int argc, char *argv[])  {     
-#endif
 #endif
 
   void gapysavpcm(struct gacmn *pcm);
