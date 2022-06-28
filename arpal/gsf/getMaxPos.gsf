@@ -1,0 +1,16 @@
+#-----------------------------------------------------------------
+#-- ritorna le posizioni dei massmi di un array fatto da elementi separati da spazi
+#-- se il max e' unico torna solo quella posizione, se il valore e' ripetuto torna la posizione di tutti i max
+function getMaxPos(string)
+ max=getMax(string)
+ nel=linlen(string)
+ i=0;while(i<nel);i=i+1
+  if( subwrd(string,i)=max )
+   if(ret='ret')
+    ret=i
+   else
+    ret=ret' 'i
+   endif
+  endif
+ endwhile
+return ret

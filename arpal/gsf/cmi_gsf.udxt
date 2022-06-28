@@ -1,0 +1,21 @@
+#
+# CMI GrADS table for Dynamic User Defined Functions.
+# There are 2 types of extensions:
+# 
+#    udc   user defined commands
+#    udf   user defined functions
+# 
+#....................................................................................................................................
+#      A
+#      P   GrADS     Library             Library              Short
+# Type I  Function   Function             Path              Description
+# -----------------------------------------------------------------------------------------------------------------------------------
+  udf  0   sind      f_gsudf             ^gsudf.gex    "sin with arguments in deg (dvd)"
+  udf  0   cosd      f_gsudf             ^gsudf.gex    "cos with arguments in deg (dvd)"
+  udf  0   tand      f_gsudf             ^gsudf.gex    "tan with arguments in deg (dvd)"
+  udf  0   atan2d    f_gsudf             ^gsudf.gex    "atan2 with arguments in deg (dvd)"
+  udf  0   squeeze   f_gsudf             ^gsudf.gex    "squeeze angle between -180 and 180, or 0 and 360 (dvd)"
+  udf  0   inside    f_gsudf             ^gsudf.gex    "get expr inside or outside two values (dvd)"
+  udf  0   dir2vec   f_gsudf             ^gsudf.gex    "gives u and v starting from wdir and wspeed (dvd)"
+  udf  0   dirprev   f_gsudf             ^gsudf.gex    "gives prevailing direction, if any"
+  udf  0   interp    f_gsudf             ^gsudf.gex    "interp(var[ex:mslp/100], dim[ex:T], dimval[ex:13]) by davide"

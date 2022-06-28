@@ -1,0 +1,72 @@
+function dirPrev(exprx,expry)
+ _DEBUG=0
+ _DEBUG=0
+ nsec=8
+ width=360/nsec
+
+#-- variabile ddd: direzione di provenienza del vento, in gradi
+ 'define ddd=atan2d('exprx','expry',wind)'
+ 'define ddd=maskout(ddd,mag('exprx','expry')-0.5)'
+ i=1
+ nvalid.i=stat('ddd','undef')
+ dir.i='Calm'
+ say 'nel='nvalid.i' sector='i' dir='dir.i
+
+#--   settore 1: calma di vento
+#--   settore 2: vento che proviene da S
+#--   settore 3: vento che proviene da SW
+#--   settore 4: vento che proviene da W
+#--   settore 5: vento che proviene da NW
+#--   settore 6: vento che proviene da N
+#--   settore 7: vento che proviene da NE
+#--   settore 8: vento che proviene da E
+#--   settore 9: vento che proviene da SE
+#--   nvalid.i: numero di elementi che appartengono al settore i (i=1,2,...,9)
+#--   dir.i: direzione centrale del settore i
+ l1=-180-width/2
+ i=1;while(i<=nsec);i=i+1
+  l1=l1+width
+  if(i=1)
+   l2=-1*l1
+   sector='inside(ddd,'l1','l2',outside,-u,=<)'
+  l1=l1-width
+  else
+   l2=l1+width
+   sector='inside(ddd,'l1','l2',inside,-u,<=)'
+  endif
+  nvalid.i=stat(sector,'valid')
+  dir.i=l1+width/2
+  say 'nel='nvalid.i' sector='i' dir='dir.i
+ endwhile
+
+
+#-- trovo il/i massimi
+ i=0;while(i<=nsec);i=i+1
+  if(string='string');string=nvalid.i;else;string=string' 'nvalid.i;endif
+ endwhile
+ imax=getMaxPos(string)
+ imax1=subwrd(imax,1)
+ imax2=subwrd(imax,2)
+ imax3=subwrd(imax,3)
+ found=0
+#-- ho un solo max: prendo quello
+ if(imax2='')
+  say 'prevailingDir: 'dir.imax1'  sector: 'imax1'  max: 'nvalid.imax1
+  found=1
+ else
+#-- ho due max: li considero se sono contigui (caso 1-2, ..., 7-8)
+  if(imax3='' & imax1>0 & imax2=imax1+1)
+   say 'prevailingDir: 'dir.imax1+width/2'  sectors: 'imax1','imax2'  max: 'nvalid.imax1
+   found=1
+  endif
+#-- ho due max: li considero se sono contigui (caso 1-8)
+  if(imax3='' & imax1>0 & imax2-imax1=nsec-1)
+   say 'prevailingDir: 'dir.imax2+width/2'  sectors: 'imax1','imax2'  max: 'nvalid.imax1
+   found=1
+  endif
+ endif
+#-- se ho piu' di due max o se ne ho due non contigui o se ne ho due di cui uno e' la calma rinuncio
+ if(!found)
+  say 'prevailingDir: -999  sector: -999  max: -999'
+ endif
+return 'ddd'

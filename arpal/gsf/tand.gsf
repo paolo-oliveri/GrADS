@@ -1,0 +1,10 @@
+#-- torna la tangente di un angolo espresso in gradi
+#-- dvd 2020/01
+function tand(expr)
+ if(expr='help' | expr='expr' | expr='')
+  say 'uso: tand(expr)'
+  say 'torna la tangente di un angolo espresso in gradi'
+  say
+  return
+ endif
+return 'tan('expr'*3.1414/180)'

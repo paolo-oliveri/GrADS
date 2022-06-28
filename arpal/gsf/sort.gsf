@@ -1,0 +1,38 @@
+#-----------------------------------------------------------------
+#-- sorta un array fatto da elementi separati da spazi
+function sort(string)
+#-- dalla stringa string passo al vettore array
+ i=0;while(1);i=i+1
+  elem=subwrd(string,i)
+  if(elem='');nel=i-1;break;endif
+  if( valnum(elem) )
+   array.i=elem
+  else
+   say 'ERROR: in sort('string') element <'elem'> is NOT a number'
+   return
+  endif
+ endwhile
+ if(nel<1)
+  say 'ERROR: in sort('string') - NO elements found'
+  return
+ endif
+#-- sorto array
+ sorted=0
+ while(!sorted)
+  sorted=1
+  i=1;while(i<nel);i=i+1;im=i-1
+   if(array.i < array.im)
+    temp=array.i
+    array.i=array.im
+    array.im=temp
+    sorted=0
+   endif
+  endwhile
+ endwhile
+#-- dal vettore array passo alla stringa string
+ ret=array.1
+ i=1;while(i<nel);i=i+1
+  ret=ret' 'array.i
+ endwhile
+ if(_DEBUG>1);say ret' <- libNumbers::sort('string')';endif
+return(ret)

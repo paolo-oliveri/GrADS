@@ -1,0 +1,9 @@
+***************************************************************************
+* FUNCTION LINLEN ritorna la lunghezza in word di una line
+function linlen(line)
+ i=0;while(1);i=i+1
+  word=subwrd(line,i,1)
+  if(word='');ret=i-1;break;endif
+ endwhile
+ if(_DEBUG>2);say ret' <- libString::linlen('line')';endif
+return ret

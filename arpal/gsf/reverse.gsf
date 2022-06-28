@@ -1,0 +1,20 @@
+#-----------------------------------------------------------------
+#-- rovescia un array fatto da elementi separati da spazi
+function reverse(string)
+#-- dalla stringa string passo al vettore array
+ i=0;while(1);i=i+1
+  elem=subwrd(string,i)
+  if(elem='');nel=i-1;break;endif
+  array.i=elem
+ endwhile
+ if(nel<1)
+  say 'ERROR: in libNumbers::reverse('string') - NO elements found'
+  return
+ endif
+#-- giro array
+ ret=array.nel
+ i=nel;while(i>1);i=i-1
+  ret=ret' 'array.i
+ endwhile
+ if(_DEBUG>1);say ret' <- libNumbers::reverse('string')';endif
+return(ret)

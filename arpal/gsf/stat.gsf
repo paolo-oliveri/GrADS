@@ -1,0 +1,81 @@
+#-----------------------------------------------------------------
+#-- FUNCTION stat ritorna i parametri ricavabili da 'set gxout stat'
+function stat(expr,what)
+ 'q gxinfo'
+ line=sublin(result,1)
+ gxout=subwrd(line,4)
+ if(gxout='Clear');gxout='contour';endif
+ check2=0
+ if(what='sizex');check='Sizes';iword=3;endif
+ if(what='sizey');check='Sizes';iword=4;endif
+ if(what='size');check='Sizes';iword=5;endif
+ if(what='undef');check='Undef';check2='count';iword=4;endif
+ if(what='valid');check='Undef';check2='count';iword=8;endif
+ if(what='min');check='Min,';iword=4;endif
+ if(what='max');check='Min,';iword=5;endif
+ if(what='cmin');check='Cmin,';iword=5;endif
+ if(what='cmax');check='Cmin,';iword=6;endif
+ if(what='cint');check='Cmin,';iword=7;endif
+ if(what='sum');check='Stats[sum,sumsqr,root(sumsqr),n]:';iword=2;endif
+ if(what='sum2');check='Stats[sum,sumsqr,root(sumsqr),n]:';iword=3;endif
+ if(what='rsum2');check='Stats[sum,sumsqr,root(sumsqr),n]:';iword=4;endif
+ if(what='mean');check='Stats[(sum,sumsqr,root(sumsqr))/n]:';iword=2;endif
+ if(what='mean2');check='Stats[(sum,sumsqr,root(sumsqr))/n]:';iword=3;endif
+ if(what='rmean2');check='Stats[(sum,sumsqr,root(sumsqr))/n]:';iword=4;endif
+ if(what='meanm');check='Stats[(sum,sumsqr,root(sumsqr))/(n-1)]:';iword=2;endif
+ if(what='mean2m');check='Stats[(sum,sumsqr,root(sumsqr))/(n-1)]:';iword=3;endif
+ if(what='rmean2m');check='Stats[(sum,sumsqr,root(sumsqr))/(n-1)]:';iword=4;endif
+ if(what='sigma');check='Stats[(sigma,var)(n)]:';iword=2;endif
+ if(what='var');check='Stats[(sigma,var)(n)]:';iword=3;endif
+ if(what='sigmam');check='Stats[(sigma,var)(n-1)]:';iword=2;endif
+ if(what='varm');check='Stats[(sigma,var)(n-1)]:';iword=3;endif
+
+ if(check='' | check='check' | what='' | what='what' | what='help')
+  say 'torna i parametri ricavabili da set gxout stat'
+  say 'uso: stat(expr,what) dove what vale:'
+  say ' sizex	ampiezza dimensione X di expr'
+  say ' sizey	ampiezza dimensione Y di expr'
+  say ' size	ampiezza X*Y di expr'
+  say ' undef	numero dati undef di expr'
+  say ' valid	numero dati validi di expr'
+  say ' min	valore minimo di expr'
+  say ' max	valore massimo di expr'
+  say ' cmin	valore minimo di contouring di default'
+  say ' cmax	valore massimo di contouring di default'
+  say ' cint	distanza dei contour di default'
+  say ' sum	somma dei valori validi di expr'
+  say ' sum2	somma dei quadrati dei valori validi di expr'
+  say ' rsum2	radice quadrata della somma dei quadrati dei valori validi di expr'
+  say ' mean	valore medio dei valori validi di expr'
+  say ' mean2	valore medio dei quadrati dei valori validi di expr'
+  say ' rmean2	radice quadrata della media dei quadrati dei valori validi di expr'
+  say ' meanm mean2m rmean2m	come mean mean2 rmean2 ma normalizzati con (n-1) e non (n)'
+  say ' sigma	deviazione standard, per la normalizzazione viene utilizzato (n)'
+  say ' var	varianza, per la normalizzazione viene utilizzato (n)'
+  say ' sigmam varm	come sigma var ma normalizzati con (n-1) e non (n)'
+  say
+  return
+ endif
+
+ 'set gxout stat'
+ 'd 'expr
+ i=0;while(i<30);i=i+1
+  line=sublin(result,i)
+  word=subwrd(line,1)
+  if(check2)
+   word2=subwrd(line,2)
+   if(word=check & word2=check2)
+    ret=subwrd(line,iword)
+    break
+   endif
+  else
+   if(word=check)
+    ret=subwrd(line,iword)
+    break
+   endif
+  endif
+ endwhile
+
+ 'set gxout 'gxout
+ if(_DEBUG);say 'ret = <'ret'>';endif
+return ret

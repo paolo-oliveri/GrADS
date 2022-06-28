@@ -1,0 +1,32 @@
+#-- torna la porzione di expr compresa tra thr1 e thr2
+#-- se opt vale 'outside' torna la porzione esclusa
+#-- dvd 2020/01
+function inside(expr,thr1,thr2,opt,value,opt2)
+ if(expr='help' | expr='expr' | thr2='thr2')
+  say 'uso: inside(expr,thr1,thr2,[opt],[value],[opt2])'
+  say 'torna la porzione di expr compresa tra thr1 e thr2'
+  say 'se opt vale outside torna la porzione esclusa, se inside (default) quella inclusa'
+  say 'se value ha un valore nella zona non voluta ci mette quel valore, altrimenti lo lascia undef'
+  say 'se opt2 ha un valore stabilisce come comportasi sui bordi: << (default), <=, =<, =='
+  say
+  return
+ endif
+ if(value='value' | value='');value='-u';endif
+ if(opt='opt' | opt='');opt='inside';endif
+ if(opt2='opt2' | opt2='');opt2='<<';endif
+ if(opt='inside')
+  if(opt2='<<');op1='>';op2='<';endif
+  if(opt2='==');op1='>=';op2='<=';endif
+  if(opt2='<=');op1='>';op2='<=';endif
+  if(opt2='=<');op1='>=';op2='<';endif
+  ret='if('expr','op1','thr1',if('expr','op2','thr2','expr','value'),'value')'
+ endif
+ if(opt='outside')
+  if(opt2='<<');op1='<';op2='>';endif
+  if(opt2='==');op1='<=';op2='>=';endif
+  if(opt2='<=');op1='<';op2='>=';endif
+  if(opt2='=<');op1='<=';op2='>';endif
+  ret='if('expr','op1','thr1','expr',if('expr','op2','thr2','expr','value'))'
+ endif
+* if(_DEBUG);say ret;endif
+return ret

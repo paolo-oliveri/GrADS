@@ -1,0 +1,17 @@
+#-- torna l'angolo in gradi: 0 -> il vettore punta verso nord, 90 verso E, -90 verso W
+#-- se opt vale 'wind' torna la direzione di provenienza (ossia la direzione opposta)
+#-- dvd 2020/01
+function atan2d(exprx,expry,opt)
+* say 'atan2d('exprx','expry','opt')'
+ if(exprx='help' | expry='expry' | expry='')
+  say 'uso: atan2d(exprx,expry,[opt])'
+  say 'torna l`angolo in gradi, 0 -> il vettore punta verso nord, 90 verso E, -90 verso W'
+  say 'se opt vale wind torna la direzione di provenienza (ossia la direzione opposta)'
+  say
+  return
+ endif
+ if(opt='wind')
+  exprx='-1*('exprx')'
+  expry='-1*('expry')'
+ endif
+return 'atan2('exprx','expry')/3.1414*180'

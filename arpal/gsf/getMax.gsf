@@ -1,0 +1,8 @@
+#-----------------------------------------------------------------
+#-- ritorna il massimo di un array fatto da elementi separati da spazi
+function getMax(string)
+ string=sort(string)
+ string=reverse(string)
+ ret=subwrd(string,1)
+ if(_DEBUG>1);say ret' <- libNumbers::getMax('string')';endif
+return ret

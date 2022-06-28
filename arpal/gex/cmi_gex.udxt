@@ -1,0 +1,24 @@
+#
+# CMI GrADS table for Dynamic User Defined Commands/Functions.
+# There are 2 types of extensions:
+# 
+#    udc   user defined commands
+#    udf   user defined functions
+# 
+#....................................................................................................................................
+#      A
+#      P   GrADS     Library             Library              Short
+# Type I  Function   Function             Path              Description
+# -----------------------------------------------------------------------------------------------------------------------------------
+# libdvd:
+  udf  0  bterp      f_dvd               ^libdvd.gex   "box averaging by davide"
+  udf  0  raigrid    f_dvd               ^libdvd.gex   "rain 1/(r^2) averaging by davide"
+  udf  0  shift      f_dvd               ^libdvd.gex   "shift(grid,xshift,yshift) by davide"
+  udf  0  tshift     f_dvd               ^libdvd.gex   "tshift(grid,minutes_shift) by davide"
+
+# libshell:
+  udc  0  shell      c_shell             ^libshell.gex "return output of shell cmd by davide"
+  udc  0  addnewline c_CarriageReturn    ^libshell.gex "return CR to result by davide"
+
+# libperc:
+  udf  0  percentile f_dvd               ^libperc.gex  "percentile(var, dim=dim1[ex:e=1], dim=dim2[ex:e=20], perc[1-100]) by M. Sardo"

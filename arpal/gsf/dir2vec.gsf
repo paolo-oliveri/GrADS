@@ -1,0 +1,18 @@
+#-- torna la componente U o V del vento a partire da direzione vento in gradi e intensita'
+#-- la componente che voglio la metto nel parametro wanted (u|x o v|y)
+#-- se mag non viene passata viene considerata costante e uguale a 1
+#-- se opt = 'wind' la direzione del vento la considera di provenienza, altrimenti di arrivo
+#-- dvd 2020/01
+function dir2vec(wdir,wspeed,wanted,opt)
+ if(wdir='help' | wanted='wanted' | wanted='')
+  say 'uso: dir2vec(wdir,[wspeed[,wanted,[opt])'
+  say 'torna la componente U o V del vento a partire da direzione vento in gradi e intensita`'
+  say
+  return
+ endif
+ if(wanted='u' | wanted='x');func='sind';endif
+ if(wanted='v' | wanted='y');func='cosd';endif
+ if(wspeed='wspeed' | wspeed='');wspeed='const('wdir',1)';endif
+ if(opt='wind');wspeed='-1*'wspeed;endif
+ say wspeed'*'func'('wdir')'
+return wspeed'*'func'('wdir')'
