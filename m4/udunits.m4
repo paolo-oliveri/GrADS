@@ -37,11 +37,11 @@ AC_DEFUN([AC_CHECK_UDUNITS2],
     ],
     [
       for ac_udunits2_libdir in "" /usr/lib64 /usr/lib /usr/local/lib \
-       /usr/libudunits/lib64 /usr/local/lib64/libudunits \
-       /usr/local/udunits/lib /usr/local/libudunits/lib \ 
-       /usr/udunits/lib /usr/local/lib/udunits /opt/lib/udunits \
-       /usr/libudunits/lib /usr/local/lib/libudunits /opt/lib/libudunits \
-       /usr/lib/udunits /usr/lib/libudunits ; do
+       /usr/libudunits2/lib64 /usr/local/lib64/libudunits2 \
+       /usr/local/udunits2/lib /usr/local/libudunits2/lib \ 
+       /usr/udunits2/lib /usr/local/lib/udunits2 /opt/lib/udunits2 \
+       /usr/libudunits2/lib /usr/local/lib/libudunits2 /opt/lib/libudunits2 \
+       /usr/lib/udunits2 /usr/lib/libudunits2 ; do
         AS_IF([test "z$ac_udunits2_libdir" = "z"],
            [UDUNITS2_LDFLAGS=],
            [
@@ -67,11 +67,11 @@ AC_DEFUN([AC_CHECK_UDUNITS2],
     ],
     [
       for ac_udunits2_incdir in /usr/include \
-       /usr/local/udunits/include /opt/udunits/include \ 
-       /usr/udunits/include /usr/local/include/udunits \
-       /opt/include/udunits /usr/include/udunits /usr/local/libudunits/include \
-       /opt/libudunits/include /usr/libudunits/include /usr/local/include/libudunits \
-       /opt/include/libudunits /usr/include/libudunits ; do
+       /usr/local/udunits2/include /opt/udunits2/include \ 
+       /usr/udunits2/include /usr/local/include/udunits2 \
+       /opt/include/udunits2 /usr/include/udunits2 /usr/local/libudunits2/include \
+       /opt/libudunits2/include /usr/libudunits2/include /usr/local/include/libudunits2 \
+       /opt/include/libudunits2 /usr/include/libudunits2 ; do
         AS_IF([test "z$ac_udunits2_incdir" = "z"],
            [UDUNITS2_CFLAGS=],
            [

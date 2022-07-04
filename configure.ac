@@ -589,7 +589,7 @@ if test "Z$ga_supplib_dir" != "Z" ; then
       [ AC_CHECK_LIB(cairo,main,
         [ use_cairo=yes
           have_cairo=yes
-          GA_SET_INCLUDE_VAR([cairo_inc], [cairo freetype2])
+#          GA_SET_INCLUDE_VAR([cairo_inc], [cairo freetype2])
 #          GA_SET_LIB_VAR(cairo_libs, [cairo Xrender fontconfig freetype pixman-1 png xml2 z])
           GA_SET_DYNLIB_VAR(cairo_libs, [cairo])
         ])
@@ -714,8 +714,8 @@ if test $use_hdf != "yes" -a "$have_udunits" = "yes" -a "$ga_dyn_supplibs" = "ye
   echo looking in other system locations
   AC_CHECK_HDF4_NETCDF([use_hdf=yes], [use_hdf=yes])
   if test "$use_hdf" = 'yes'; then
-    hdf_libs="$HDF4_LDFLAGS $HDF4_LIBS $UDUNITS_LIBS"
-    hdf_inc="$HDF4_CFLAGS $UDUNITS_CFLAGS"
+    hdf_libs="$HDF4_LDFLAGS $HDF4_LIBS $UDUNITS2_LIBS"
+    hdf_inc="$HDF4_CFLAGS $UDUNITS2_CFLAGS"
   fi
 fi
 # set output variables
@@ -773,8 +773,8 @@ if test "$have_udunits" = "yes" ; then
         if test "$nchdf5" = "yes" ; then
           use_nc4="yes"
         fi
-        nc_inc="$NC_CFLAGS $UDUNITS_CFLAGS"
-        nc_libs="$NC_LIBS $UDUNITS_LIBS"
+        nc_inc="$NC_CFLAGS $UDUNITS2_CFLAGS"
+        nc_libs="$NC_LIBS $UDUNITS2_LIBS"
       ])
     fi
   fi
@@ -854,7 +854,8 @@ if test "$use_gui" != "yes" -a "$ga_dyn_supplibs" = "yes" ; then
   echo looking in system locations
   GA_CHECK_GUI([
     use_gui=yes
-    GA_SET_LIB_VAR(gui_libs, [sx])
+#    GA_SET_LIB_VAR(gui_libs, [sx])
+    GA_SET_DYNLIB_VAR(gui_libs, [sx])
     if test z"$gui_libs_Xext" != 'z'; then
       gui_libs="$gui_libs -lXext"
     fi
@@ -882,7 +883,7 @@ else
   else
     AC_DEFINE(USEFREQ, 0, [Use GetFile from freq])
   fi
-  GA_SET_INCLUDE_VAR([gui_inc],[libsx]) 
+#  GA_SET_INCLUDE_VAR([gui_inc],[libsx]) 
   AC_SUBST(gui_inc)
   AC_SUBST(gui_libs)
 fi

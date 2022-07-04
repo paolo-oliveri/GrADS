@@ -89,15 +89,17 @@ DISTCLEANFILES = buildinfo.h config.h
 
 supp_include_dir	= $(SUPPLIBS)/include
 supp_lib_dir		= $(SUPPLIBS)/lib
-LDADD			= -L$(supp_lib_dir) $(geotiff_ldflags) $(shp_ldflags) $(gd_ldflags)
+LDADD			= $(geotiff_ldflags) $(shp_ldflags) $(gd_ldflags)
+# -L$(supp_lib_dir)
 
 common_ldadd            = $(LDADD) $(host_ldadd) 
 X11_ldadd               = $(X_LIBS) $(X_PRE_LIBS) -lX11 -lXext $(X_EXTRA_LIBS)
 
 
-AM_CPPFLAGS		= -DOPENGRADS -I. -I$(supp_include_dir) $(gui_inc) $(nc_inc) \
+AM_CPPFLAGS		= -DOPENGRADS -I. $(gui_inc) $(nc_inc) \
 			  $(hdf_inc) $(hdf5_inc) $(geotiff_inc) $(shp_inc) $(gadap_inc) \
-                          $(X_CFLAGS) $(XAW_CFLAGS) $(HDF4_CFLAGS) 
+                          $(X_CFLAGS) $(XAW_CFLAGS) $(HDF4_CFLAGS)
+# -I$(supp_include_dir)
 
 ## libraries needed
 grads_LDADD	      = $(common_ldadd) $(readline_libs) $(grib2_libs) \
@@ -106,13 +108,15 @@ grads_LDADD	      = $(common_ldadd) $(readline_libs) $(grib2_libs) \
 
 # print with GD
 if USEGD
-libgxpGD_la_CPPFLAGS = -I. -I$(SUPPLIBS)/include
+libgxpGD_la_CPPFLAGS = -I.
+# -I$(SUPPLIBS)/include
 libgxpGD_la_LIBADD = $(LDADD) $(gd_libs)
 libgxpGD_la_LDFLAGS = -version-info $(LIBGX_VERSION)
 endif
 
 # display X11 
-libgxdX11_la_CPPFLAGS = -I. -I$(SUPPLIBS)/include
+libgxdX11_la_CPPFLAGS = -I.
+# -I$(SUPPLIBS)/include
 libgxdX11_la_LIBADD = $(X11_ldadd)
 libgxdX11_la_LDFLAGS = -version-info $(LIBGX_VERSION)
  
@@ -147,9 +151,10 @@ libgradspy_la-grads.o: $(srcdir)/grads.c
 	$(COMPILE) -DSHRDOBJ -o libgradspy_la-grads.lo -c $(srcdir)/grads.c
 
 libgradspy_la_CFLAGS   = -DSHRDOBJ
-libgradspy_la_CPPFLAGS = -I. -I$(SUPPLIBS)/include $(gui_inc) $(geotiff_inc) \
+libgradspy_la_CPPFLAGS = -I. $(gui_inc) $(geotiff_inc) \
                          $(nc_inc) $(hdf_inc) $(hdf5_inc) \
-                         $(shp_inc) $(gadap_inc) $(X_CFLAGS) $(XAW_CFLAGS) 
+                         $(shp_inc) $(gadap_inc) $(X_CFLAGS) $(XAW_CFLAGS)
+# -I$(SUPPLIBS)/include
 libgradspy_la_LIBADD   = $(common_ldadd) $(readline_libs) $(grib2_libs) \
 			 $(hdf_libs) $(hdf5_libs) $(nc_libs) $(geotiff_libs) \
 			 $(shp_libs) $(gadap_libs) $(gui_libs) 

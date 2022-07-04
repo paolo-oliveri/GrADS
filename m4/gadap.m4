@@ -6,7 +6,7 @@ AC_DEFUN([GA_CHECK_LIB_GADAP],
   AC_CHECK_HEADER(gadap.h,
   [ AC_CHECK_LIB(gadap, main, [
       ga_check_gadap="yes"
-      GADAP_LIBS="-lgadap"
+      GADAP_LIBS="-lgadap -ldapclient -ldapserver -ldap"
     ])
   ])
   if test $ga_check_gadap = "yes" ; then
