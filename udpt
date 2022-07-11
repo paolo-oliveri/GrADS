@@ -1,10 +1,10 @@
 # Type     Name     Full path to shared object file
 # ----     ----     -------------------------------
-gxdisplay  Cairo    ^/../libgxdCairo.so
-gxdisplay  X11      ^/../libgxdX11.so
-gxdisplay  gxdummy  ^/../libgxdummy.so
+gxdisplay  Cairo    GRADSPREFIX/libgxdCairo.so
+gxdisplay  X11      GRADSPREFIX/libgxdX11.so
+gxdisplay  gxdummy  GRADSPREFIX/libgxdummy.so
 *
-gxprint    Cairo    ^/../libgxpCairo.so
-gxprint    GD       ^/../libgxpGD.so
-gxprint    gxdummy  ^/../libgxdummy.so
+gxprint    Cairo    GRADSPREFIX/libgxpCairo.so
+gxprint    GD       GRADSPREFIX/libgxpGD.so
+gxprint    gxdummy  GRADSPREFIX/libgxdummy.so
 *
