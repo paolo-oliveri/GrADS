@@ -79,6 +79,7 @@ AC_DEFUN([AC_CHECK_HDF5],
         CPPFLAGS=$ac_hdf5_save_CPPFLAGS
       done
     ])
+  HDF5_CFLAGS="-DH5_USE_110_API"
   CPPFLAGS=$ac_hdf5_save_CPPFLAGS
   
   AS_IF([test "$ac_hdf5_h" = 'yes' -a "$ac_hdf5_lib_ok" = 'yes'],

@@ -3,8 +3,7 @@ C
 
       subroutine stat2(a,m,n,amin,amax,amean,avar,asigma)
       USE gex
-      real(kind=iGaKind) :: dimension a(m,n)
-
+      real(kind=iGaKind), dimension(:,:) :: a(m,n)
       amean = 0.0
       amin = 9.9e25
       amax = -9.9e25
@@ -80,7 +79,7 @@ C
       je=nj-1
 
       call smth2d(fld,ni,nj,ib,ie,jb,je,
-     $     anu,npass,nnu,ioresp,io,iskip,dx,dum,undef)
+     $     anu,npass,nnu,ioresp,io,iskip,dble(dx),dum,undef)
 
       return
       end
