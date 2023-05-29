@@ -41,7 +41,7 @@ Optional packages (for TCL module building):
 
 Some older packages that are not present in the repository (for example, libsx, libXaw3dxft and gadap for dnf repository) are bundled in this repository and staled.
 
-The [GrADS](https://github.com/j-m-adams/GrADS) repository is added as a git submodule. Please BE AWARE before pulling down GrADS repository update that they can broke the patch process. Actually the patch works for commit **20cf6792436853f13bc1a97f51f4a1f50ab816b9** of branch *dev*.
+The [GrADS](https://github.com/j-m-adams/GrADS) repository is added as a git submodule. Please BE AWARE before pulling down GrADS repository update that they can broke the patch process. Actually the patch works for commit **067f2e83fb5ede55920472714166384fb212a5aa** of branch *master*.
 
 ## Cloning this repository
 Due to the git submodule presence, the command for cloning this repository must add the "--recurse-submodule" option (valid since git version 2.13)
@@ -57,7 +57,6 @@ The build phase is divided into several steps:
 3. Patch, run GNU Autotools, build and install GrADS with OpenGrADS extension activated
 4. Build, test and install extensions, scripts, data and shapefiles
 5. Install GrADS TCL modulefile (optional)
-6. Install GradsPy (optional). NOTE: please check that numpy is installed, otherwise the installation will fail
 
 ## Build example
 
@@ -69,7 +68,6 @@ Input arguments:
 
 1. GrADS installation directory (mandatory)
 2. TCL module installation directory (optional)
-3. Python installation directory (optional)
 
 Example:
 
