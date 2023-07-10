@@ -230,8 +230,16 @@ endif
 all : $(UDXS) $(UDXT) $(PODS)
 
 install : $(UDXS) $(UDXT) $(PODS)
-	@/bin/mkdir -p $(bindir) $(gexdir)
-	/bin/cp -p $(UDXS) $(UDXT) $(XDLLS_) $(gexdir)
+	@/bin/mkdir -p $(bindir) $(gexdir) $(gsfdir)
+        ifneq ($(UDXS), )
+	    /bin/cp -p $(UDXS)               $(gexdir)
+        endif
+        ifneq ($(UDXT), )
+	    /bin/cp -p $(UDXT)               $(gexdir)
+        endif
+        ifneq ($(XDLLS_), )
+	    /bin/cp -p $(XDLLS_)             $(gexdir)
+        endif
         ifneq ($(XBINS), )
 	    /bin/cp -p $(XBINS)              $(bindir)
         endif
@@ -240,7 +248,6 @@ install : $(UDXS) $(UDXT) $(PODS)
         endif
         ifneq ($(GSFS), )
 	    /bin/cp -rp $(GSFS)              $(gsfdir)
-        endif
         endif
 
 html : $(HTMS)
