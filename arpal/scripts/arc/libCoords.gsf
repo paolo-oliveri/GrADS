@@ -1,0 +1,91 @@
+#-----------------------------------------------------------------
+#-- libreria conversione coordinate di pagina, griglia, globali
+function libCoords()
+ if(_DEBUG)
+  say 'sourcing libCoords: xg,yg <- Cw2gr(rlon,rlat)'
+  say '                    xg,yg <- Cxy2gr(xp,yp)'
+  say '                    xp,yp <- Cw2xy(rlon,rlat)'
+  say '                    xp,yp <- Cgr2xy(xg,yg)'
+  say '                    rlon,rlat <- Cgr2w(xg,yg)'
+  say '                    rlon,rlat <- Cxy2w(xp,yp)'
+  say '                    xp,yp <- Cxy2Snap(xp,yp,offset)'
+ endif
+return
+
+#-----------------------------------------------------------------
+#-- converte da coordinate globali a griglia
+#-- se Snap=1 torna il centro griglia piu' vicino
+function Cw2gr(rlon,rlat,Snap)
+ 'q w2gr 'rlon' 'rlat
+ xg=subwrd(result,3)
+ yg=subwrd(result,6)
+ if(Snap='' | Snap='Snap');Snap=0;endif
+ if(Snap)
+  xg=math_nint(xg);yg=math_nint(yg)
+ endif
+ if(_DEBUG);say xg' 'yg' <- libCoords::Cw2gr('rlon','rlat','Snap')';endif
+return (xg' 'yg)
+
+#-----------------------------------------------------------------
+#-- converte da coordinate di pagina a griglia
+#-- se Snap=1 torna il centro griglia piu' vicino
+function Cxy2gr(xp,yp,Snap)
+ 'q xy2gr 'xp' 'yp
+ xg=subwrd(result,3)
+ yg=subwrd(result,6)
+ if(Snap='' | Snap='Snap');Snap=0;endif
+ if(Snap)
+  xg=math_nint(xg);yg=math_nint(yg)
+ endif
+ if(_DEBUG);say xg' 'yg' <- libCoords::Cxy2gr('xp','yp','Snap')';endif
+return (xg' 'yg)
+
+#-----------------------------------------------------------------
+#-- converte da coordinate globali a pagina
+function Cw2xy(rlon,rlat)
+ 'q w2xy 'rlon' 'rlat
+ xp=subwrd(result,3)
+ yp=subwrd(result,6)
+ if(_DEBUG);say xp' 'yp' <- libCoords::Cw2xy('rlon','rlat')';endif
+return (xp' 'yp)
+
+#-----------------------------------------------------------------
+#-- converte da coordinate di griglia a pagina
+function Cgr2xy(xg,yg)
+ 'q gr2xy 'xg' 'yg
+ xp=subwrd(result,3)
+ yp=subwrd(result,6)
+ if(_DEBUG);say xp' 'yp' <- libCoords::Cgr2xy('xg','yg')';endif
+return (xp' 'yp)
+
+#-----------------------------------------------------------------
+#-- converte da coordinate di griglia a globali
+function Cgr2w(xg,yg)
+ 'q gr2w 'xg' 'yg
+ rlon=subwrd(result,3)
+ rlat=subwrd(result,6)
+ if(_DEBUG);say rlon' 'rlat' <- libCoords::Cgr2w('xg','yg')';endif
+return (rlon' 'rlat)
+
+#-----------------------------------------------------------------
+#-- converte da coordinate di pagina a globali
+function Cxy2w(xp,yp)
+ 'q xy2w 'xp' 'yp
+ rlon=subwrd(result,3)
+ rlat=subwrd(result,6)
+ if(_DEBUG);say rlon' 'rlat' <- libCoords::Cxy2w('xp','yp')';endif
+return (rlon' 'rlat)
+
+#-----------------------------------------------------------------
+#-- aggancia le coordinate di pagina al centro cella piu' vicino
+#-- se passo anche un offset lo aggiunge: ad ex con -0.5 si sposta di meza cella a sx o in basso
+function Cxy2Snap(xp,yp,offset)
+ dummy=Cxy2gr(xp,yp,1)
+ xg=subwrd(dummy,1);yg=subwrd(dummy,2)
+ if(offset!='offset' & offset!='')
+  xg=xg+offset
+  yg=yg+offset
+ endif
+ ret=Cgr2xy(xg,yg)
+ if(_DEBUG>1);say ret' <- libCoords::Cxy2Snap('xp','yp','offset')';endif
+return (ret)

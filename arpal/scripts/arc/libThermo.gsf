@@ -1,0 +1,297 @@
+#-----------------------------------------------------------------
+#-- libreria per la gestione della termodinamica
+function libThermo()
+ if(_DEBUG)
+  say 'sourcing libThermo: theta <- t2theta(temp,pres)'
+  say '                    Tlcl <- TempLCL(temp,dewp)'
+  say '                    Plcl <- PresLCL(temp,dewp,pres)'
+  say '                    Hlcl <- HeightLCL(temp,dewp)'
+  say '                    e <- q2e(q,p)'
+  say '                    q <- pres2q(e,p)'
+  say '                    mr <- pres2mix(e,p)'
+  say '                    Es <- temp2Es(temp)'
+  say '                    mr <- q2mix(q)'
+  say '                    q <- mix2q(mix)'
+  say '                    rh <- e2rh(e,es)'
+  say '                    td <- T2Td(temp,e)'
+  say '                    tv <- tVirtual(temp,mix)'
+  say '                    sp <- mslp2sp(mslp,orography,temp)'
+  say '                    mslp <- sp2mslp(sp,orography,temp)'
+  say '                    formula <- getFormula(var) var: q q2 r r2 td d2 gh ghtrop tcc100 lcc100 mcc100 hcc100 tcc lcc mcc hcc t2c tc mslpmb ivt ukn vkn u10kn v10kn tpN'
+ endif
+return
+
+#--------------------------------------------------------------------------------------
+#-- funzioni per sollevamento aria umida
+
+#----------------------------------------
+#-- torna theta (K) da temp (K) e pres (hPa)
+#-- Theta = T riscaldata dry adiabat fino a 1000 hPa
+function t2theta(temp,pres)
+return temp'*pow(1000/('pres'),0.286)'
+
+#----------------------------------------
+#-- torna Tlcl (K) da temp (K) e dewp (K)
+function TempLCL(temp,dewp)
+ Parta='1/('dewp'-56)'
+ Partb='log(('temp')/('dewp'))/800'
+ Tlcl='1/('Parta'+'Partb')+56'
+return Tlcl
+
+#----------------------------------------
+#-- torna Plcl (hPa) da temp (K) dewp (K) e pres (hPa)
+function PresLCL(temp,dewp,pres)
+ Tlcl=TempLCL(temp,dewp)
+ theta=t2theta(temp,pres)
+ Plcl='1000*pow(('Tlcl')/('theta'),3.48)'
+return(Plcl)
+
+#----------------------------------------
+#-- torna Zlcl (m) da temp (K) e dewp (K) tramite formula approx di james espy 
+function HeightLCL(temp,dewp)
+return '('temp'-('dewp'))*125'
+
+#--------------------------------------------------------------------------------------
+#-- funzioni per termodinamica generiche
+
+#----------------------------------------
+#-- torna la pressione parziale di vapore a partire da umidita' specifica (g/g) e pressione (hPa)
+function q2e(q,p)
+return '('p')*('q')/0.622'
+
+#----------------------------------------
+#-- torna l'umidita' specifica (g/g) a partire dalle pressioni parziali
+#-- Q = ratio of the mass of water vapour to the mass of moist air
+function pres2q(e,p)
+return '0.622*('e')/('p')'
+
+#----------------------------------------
+#-- torna il mixing ratio (g/g) a partire dalle pressioni parziali
+#-- W = ratio of the mass of water vapour to the mass of dry air
+function pres2mix(e,p)
+return '0.622*('e')/('p'-('e'))'
+
+#----------------------------------------
+#-- torna la pressione di vapor saturo (hPa) dalla temperatura (K) tramite formula August-Roche-Magnus
+function temp2Es(temp)
+ C2K=273.15
+ tempC=temp'-'C2K
+return '6.112*exp(17.67*('tempC')/('tempC'+243.5))'
+
+#----------------------------------------
+#-- torna il mixing ratio (g/g) a partire dall'umidita' specifica (g/g)
+#-- W = ratio of the mass of water vapour to the mass of dry air
+function q2mix(q)
+return '('q')/(1-('q'))'
+
+#----------------------------------------
+#-- torna l'umidita' specifica (g/g) a partire dal mixing ratio (g/g)
+#-- Q = ratio of the mass of water vapour to the mass of moist air
+function mix2q(mix)
+return '('mix')/(1+('mix'))'
+
+#----------------------------------------
+#-- torna l'umidita' relativa (%) a partire dalla pressione parziale di vapore e quella satura
+#-- Q = ratio of the mass of water vapour to its maximum
+function e2rh(e,es)
+return '100*('e')/('es')'
+
+#----------------------------------------
+#-- torna la Td (K) a partire da temp (K) e la pressione parziale di vapore (hPa)
+#-- Td = temperatura a cui raffreddando isobaricamente si arriva alla saturazione
+function T2Td(temp,e)
+ C2K=273.15
+ B=6.1078
+ C=17.2693882
+ D=237.3
+return '('D'*log(('e')/'B'))/('C'-log(('e')/'B'))+'C2K
+
+#----------------------------------------
+#-- torna la temperatura virtuale a partire temp (K) e mixing ratio (g/g)
+#-- la Tv e' la T che avrebbe l'aria se fosse secca ma mantenesse la stessa densita', Tv >= T
+function tVirtual(temp,mix)
+return '('temp')*(1.0+0.6*('mix'))'
+
+#----------------------------------------
+#-- torna la surface pressure a partire da mslp (stesse units di sp) orografia (m) e temperatura a quota orografia, tipicamente t2, (K)
+function mslp2sp(mslp,orography,temp)
+return '('mslp')*exp(-9.81*('orography')/(287*('temp'+0.0065/2*('orography'))))'
+
+#----------------------------------------
+#-- torna la mslp a partire da sp (stesse units di mslp) orografia (m) e temperatura a quota orografia, tipicamente t2, (K)
+function sp2mslp(sp,orography,temp)
+return '('sp')/exp(-9.81*('orography')/(287*('temp'+0.0065/2*('orography'))))'
+
+#-----------------------------------------------------------------
+#-- ritorna la variabile richiesta sulla base di quanto presente sul ctl. Se inapplicabile non torna nulla
+#-- necessita del vettore _VAR.i
+function getFormula(var)
+ if(var='help')
+  say 'per plottare la variabile giusta, ad esempio se voglio plottare la "r" con getFormula("r") torna "r" se presente nel ctl'
+  say 'in alternativa torna una formula che la ricostruisce se nel ctl ci sono i campi necessari alla formula, Se non trova nulla torna 0'
+  say 'elenco furmule gestite: q q2 r r2 td d2 gh ghtrop tcc100 lcc100 mcc100 hcc100 tcc lcc mcc hcc t2c tc mslpmb ukn vkn u10kn v10kn tpN wdir wdir10 wspd wspd10'
+ endif
+ if(_NVAR='_NVAR')
+  say '_NVAR UNDEFINED'
+  return
+ endif
+#-- creo la lista delle variabil presenti
+ iv=1;varList=_VAR.iv;while(iv<_NVAR);iv=iv+1
+  varList=varList' '_VAR.iv
+ endwhile
+ if(_DEBUG>1);say varList;endif
+#-- la var e' nella lista
+ if( checkList(var,varList) )
+  fact=getFactor(var)
+  return var%fact
+ endif
+#-- la var non e' nella lista ma e' ricavabile
+#-- umidita' e temperature
+#-- q <- r,t,p
+ if( var='q' & checkList('r',varList) & checkList('t',varList) )
+  return '0.622*6.1078*exp((17.2693882*(t-273.15))/(t-273.15+237.3))*(r/100)/lev*1000'
+ endif
+ if( var='q2' & checkList('r2',varList) & checkList('t2',varList) & _SP!='_SP' )
+  return '0.622*6.1078*exp((17.2693882*(t2-273.15))/(t2-273.15+237.3))*(r2/100)/'_SP'*100'
+ endif
+#-- r <- q,t,p
+ if( var='r' & checkList('q',varList) & checkList('t',varList) )
+  return 'q*1000/(0.622*6.1078*exp((17.2693882*(t-273.15))/(t-273.15+237.3)))*lev/10'
+ endif
+ if( var='r2' & checkList('q2',varList) & checkList('t2',varList) & _SP!='_SP' )
+  return 'q2*1000/(0.622*6.1078*exp((17.2693882*(t2-273.15))/(t2-273.15+237.3)))*'_SP'/100'
+ endif
+#-- r <- td,t
+ if( var='r' & checkList('td',varList) & checkList('t',varList) )
+  return '100*exp((17.2693882*(td-273.15))/(td-273.15+237.3) - (17.2693882*(t-273.15))/(t-273.15+237.3))'
+ endif
+ if( var='r2' & checkList('d2',varList) & checkList('t2',varList) )
+  return '100*exp((17.2693882*(d2-273.15))/(d2-273.15+237.3) - (17.2693882*(t2-273.15))/(t2-273.15+237.3))'
+ endif
+#-- td <- q,p
+ if( var='td' & checkList('q',varList) )
+  return '273.16+(237.3*log(1000*q*lev/3799.0516))/(17.2693882-log(1000*q*lev/3799.0516))'
+ endif
+ if( var='d2' & checkList('q2',varList) & _SP!='_SP' )
+  return '273.16+(237.3*log(1000*q2*'_SP'/100/3799.0516))/(17.2693882-log(1000*q2*'_SP'/100/3799.0516))'
+ endif
+#-- td <- r,t,p
+ if( var='td' & checkList('r',varList) & checkList('t',varList) )
+  return 't-((14.55+0.114*(t-273.16))*(1-0.01*r)+pow((2.5+0.007*(t-273.16))*(1-0.01*r),3)+(15.9+0.117*(t-273.16))*pow((1-0.01*r),14))'
+ endif
+ if( var='d2' & checkList('r2',varList) & checkList('t2',varList) )
+  return 't2-((14.55+0.114*(t2-273.16))*(1-0.01*r2)+pow((2.5+0.007*(t2-273.16))*(1-0.01*r2),3)+(15.9+0.117*(t2-273.16))*pow((1-0.01*r2),14))'
+ endif
+#-- geopotenziali, pressioni, nuvolosita' e vento
+#-- gh <- z
+ if( var='gh' & checkList('z',varList) )
+  return '1/9.81*z'
+ endif
+ if( var='ghtrop' & checkList('ztrop',varList) )
+  return '1/9.81*ztrop'
+ endif
+ if ( var='oro' & checkList('zsfc',varList) )
+  return '1/9.81*zsfc'
+ endif
+#-- tcc100 <- tcc
+ if( var='tcc100' & checkList('tcc',varList) )
+  return '100*tcc'
+ endif
+#-- lcc100 <- lcc
+ if( var='lcc100' & checkList('lcc',varList) )
+  return '100*lcc'
+ endif
+#-- mcc100 <- mcc
+ if( var='mcc100' & checkList('mcc',varList) )
+  return '100*mcc'
+ endif
+#-- hcc100 <- hcc
+ if( var='hcc100' & checkList('hcc',varList) )
+  return '100*hcc'
+ endif
+#-- tcc <- tcc100
+ if( var='tcc' & checkList('tcc100',varList) )
+  return '0.01*tcc100'
+ endif
+#-- lcc <- lcc100
+ if( var='lcc' & checkList('lcc100',varList) )
+  return '0.01*lcc100'
+ endif
+#-- mcc <- mcc100
+ if( var='mcc' & checkList('mcc100',varList) )
+  return '0.01*mcc100'
+ endif
+#-- hcc <- hcc100
+ if( var='hcc' & checkList('hcc100',varList) )
+  return '0.01*hcc100'
+ endif
+#-- t2c <- t2
+ if( var='t2c' & checkList('t2',varList) )
+  return '-273.15+t2'
+ endif
+#-- tc <- t
+ if( var='tc' & checkList('t',varList) )
+  return '-273.15+t'
+ endif
+#-- mslpmb <- mslp
+ if( var='mslpmb' & checkList('mslp',varList) )
+  return '1/100*mslp'
+ endif
+#-- ukn <- u
+ if( var='ukn' & checkList('u',varList) )
+  return '1.94*u'
+ endif
+#-- vkn <- v
+ if( var='vkn' & checkList('v',varList) )
+  return '1.94*v'
+ endif
+#-- u10kn <- u10
+ if( var='u10kn' & checkList('u10',varList) )
+  return '1.94*u10'
+ endif
+#-- v10kn <- v10
+ if( var='v10kn' & checkList('v10',varList) )
+  return '1.94*v10'
+ endif
+#-- ivt
+ if( var='ivt' & checkList('u',varList) & checkList('v',varList))
+  Q=getFormula('q')
+  return 'mag(vint(const(lev,1000),'Q'*u,300),vint(const(lev,1000),'Q'*v,300))/1000'
+ endif
+#-- piogge
+#-- tpN from tpDTIMEHR, ex.: tp6 <- tp3
+ if(substr(var,1,2)='tp' & checkList('tp'_DTIMEHR,varList))
+  want=substr(var,3,2)
+  if(_DTIMEHR<=want)
+   fact=getFactor('tp'_DTIMEHR)
+   t_tmp=want/_DTIMEHR-1
+   return 'tloop(sum(tp'_DTIMEHR',t-'t_tmp',t+0))'fact
+  endif
+ endif
+#-- tpN from tp, ex.: tp6 <- tp
+ if(substr(var,1,2)='tp' & checkList('tp',varList))
+  want=substr(var,3,2)
+  if(_DTIMEHR<=want)
+   fact=getFactor('tp')
+   t_tmp=want/_DTIMEHR
+   return '(tp-const(tp(t-'t_tmp'),0,-u))'fact
+  endif
+ endif
+#-- wdir10 <- u10,v10
+ if( var='wdir10' & checkList('u10',varList) & checkList('v10',varList))
+  return 'atan2(-u10,-v10)*360/6.28'
+ endif
+#-- wdir <- u,v
+ if( var='wdir' & checkList('u',varList) & checkList('v',varList))
+  return 'atan2(-u,-v)*360/6.28'
+ endif
+#-- wspd10 <- u10,v10
+ if( var='wspd10' & checkList('u10',varList) & checkList('v10',varList))
+  return 'mag(u10,v10)'
+ endif
+#-- wspd <- u,v
+ if( var='wspd' & checkList('u',varList) & checkList('v',varList))
+  return 'mag(u,v)'
+ endif
+#-- end: nothing found
+return 0

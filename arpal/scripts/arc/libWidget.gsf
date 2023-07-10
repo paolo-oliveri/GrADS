@@ -1,0 +1,93 @@
+#-----------------------------------------------------------------
+#-- libreria gestione widget classici
+function libWidget()
+ if(_DEBUG)
+  say 'sourcing libWidget: NULL <- drawRband(type,id)'
+  say '                    xpos,ypos,ibut,widType,widId,res8,res9,inside,oneOnly,widName,widGroup <- parseRes(res)'
+  say '                    NULL <- radioBox(idStart,idEnd,widId)'
+ endif
+return
+
+#-----------------------------------------------------------------
+#-- crea una rubber band all'interno della plot area
+function drawRband(type,id)
+ if(_DEBUG);say 'libParea::drawRband('type','id')';endif
+ if(type='type');type=box;endif
+ if(id='id');id=1;endif
+ parea=getParea()
+ 'set rband 'id' 'type' 'parea
+return
+
+#-----------------------------------------------------------------
+#-- capisce dove clicco
+function parseRes(res,groups)
+ res=sublin(res,1)
+#-- parsifico res
+#--  1       2  3    4    5    6     7       8      9
+#-- Position = xpos ypos ibut class widget# xpos2 ypos2
+ xpos=subwrd(res,3)
+ ypos=subwrd(res,4)
+ ibut=subwrd(res,5)
+ class=subwrd(res,6)
+ res8=subwrd(res,8)
+ res9=subwrd(res,9)
+ if(res8='');res8=-999;endif
+ if(res9='');res9=-999;endif
+ inside=insideParea(xpos,ypos)
+ oneOnly=1
+#-- se ho centrato un widget trovo la widType (button,rband,dropmenu) il widName il widId lo widStatus il widGroup (VARS GRAPH CMD TIME EENS)
+ if(class=0)
+  widType='none'
+ else
+  widId=subwrd(res,7)
+  if(_MENU.widId!='_MENU.'widId)
+   widName=_MENU.widId
+  endif
+ endif
+ if(class=1)
+  widType='button'
+  widStatus=subwrd(res,8)
+ endif
+ if(class=2)
+  widType='rband'
+  if(xpos!=res8 | ypos!=res9);oneOnly=0;endif
+ endif
+ if(class=3)
+  widType='dropmenu'
+  cascMenu=res8
+  cascItem=res9
+ endif
+#-- ho cliccato su un bottone che appartiene a un radiogroup (come VARS GRAPH CMD TIME EENS LEVS)
+ if(widType='button')
+  nGroups=linlen(groups)
+  ig=0;while(ig<nGroups);ig=ig+1
+   wg=subwrd(groups,ig)
+   if(_MENU.wg.0!='_MENU.'wg'.0' & _MENU.wg.1!='_MENU.'wg'.1' & widId>=_MENU.wg.0 & widId<=_MENU.wg.1)
+    widGroup=wg
+    break
+   endif
+  endwhile
+ endif
+#-- return
+#--  1      2      3      4         5       6      7      8        9         10        11
+ ret=xpos' 'ypos' 'ibut' 'widType' 'widId' 'res8' 'res9' 'inside' 'oneOnly' 'widName' 'widGroup
+ if(_DEBUG);say ret' <- libParea::parseRes('res')';endif
+return(ret)
+
+#-----------------------------------------------------------------
+#-- tratta la sequenza dei bottoni da idStart a idEnd come un radiobox: attiva solo widId
+function radioBox(idStart,idEnd,widId)
+ if(_DEBUG);say 'libParea::radioBox('idStart','idEnd','widId')';endif
+ found=0
+ id=idStart-1;while(id<idEnd);id=id+1
+  if(id!=widId)
+   status=0
+  else
+   status=1
+   found=1
+  endif
+  if(_DEBUG>1);say 'radioBox('idStart','idEnd','widId'): redraw button 'id' 'status;endif
+  'redraw button 'id' 'status
+ endwhile
+ if(!found);say '!!! radioBox('idStart','idEnd','widId') - NOT INSIDE found='found' !!!';endif
+return

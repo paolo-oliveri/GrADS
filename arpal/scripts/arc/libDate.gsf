@@ -1,0 +1,222 @@
+#-----------------------------------------------------------------
+#-- libreria trattamento delle date
+#-- contenendo getCtlTdef, subWrdLin e' indipendente da libString per tutto tranne che per dtrf2grads(dateInp,complete)
+function libDate()
+ if(_DEBUG)
+  say 'sourcing libDate: NTIME,TIME0,DTIME,TUNIT <- getCtlTdef()'
+  say '                  word <- subWrdLin(text,ilin,iwrd)'
+  say '                  FT <- getFTfromIST(ist)'
+  say '                  ist <- getISTfromFT(FT)'
+  say '                  date <- getDATEfromIST(ist) torna una data in formato GrADS'
+  say '                  settings <- getDIMsettings(dim) torna il settaggio della dimensione richiesta: lower e upper, solo uno se fixed'
+  say '                  date <- dateConvert(date,format,toLocal) permette il cambio di formato e il passaggio a UTC a Rome, usa il comando `date`'
+  say '                  date <- dtrf2grads(dateInp,complete) converte una data in formato DTRF a GrADS o viceversa'
+  say '                  wDay <- getWDay(yyyy,mm,dd) torna il Day of the Week per una data'
+ endif
+return
+
+#------------------------------------------------------
+#-- usando q ctlinfo torna NTIME TIME0 DTIME e TUNIT (normalmente in minuti)
+function getCtlTdef()
+ 'q ctlinfo'
+ text=result
+ ilin=1;while( subWrdLin(text,ilin,1)!='tdef' & ilin<100);ilin=ilin+1
+ endwhile
+ if(ilin=100);say 'ERROR, line NOT found';return;endif
+ NTIME=subWrdLin(text,ilin,2)
+ TYPE=subWrdLin(text,ilin,3)
+ if(TYPE!='linear');say 'ERROR';return;endif
+ TIME0=subWrdLin(text,ilin,4)
+ DTIMEU=subWrdLin(text,ilin,5)
+ 'sed s/[0-9]+// 'DTIMEU;TUNIT=subWrdLin(result,2,1)
+ 'sed s/[a-z]+// 'DTIMEU;DTIME=subWrdLin(result,2,1)
+ if(TUNIT!='mn');say 'ERROR, TUNIT expected <mn> but found <'TUNIT'>';return;endif
+return NTIME' 'TIME0' 'DTIME' 'TUNIT
+
+#------------------------------------------------------
+#-- torna la parola nella posizione <iwrd> della riga <ilin> del testo <text>
+#-- se valorizzo cmd text viene considerato un comando da cui prendo l'output
+function subWrdLin(text,ilin,iwrd,cmd)
+ if(cmd='cmd' | cmd='');cmd=0;endif
+ if(cmd)
+  text
+  text=result
+ endif
+ line=sublin(text,ilin)
+ word=subwrd(line,iwrd)
+return word
+
+#------------------------------------------------------
+#-- torna un FT (in ore) da un istante
+function getFTfromIST(ist)
+ dummy=getCtlTdef()
+ DTIME=subwrd(dummy,3)
+*say 'FT=('ist'-1)*'DTIME'/60'
+ FT=(ist-1)*DTIME/60
+return FT
+
+#------------------------------------------------------
+#-- torna un istante da un FT (in ore)
+function getISTfromFT(FT)
+ dummy=getCtlTdef()
+ DTIME=subwrd(dummy,3)
+* say 'ist='FT'*60/'DTIME'+1'
+ ist=FT*60/DTIME+1
+return ist
+
+#------------------------------------------------------
+#-- torna una DATE da un istante
+function getDATEfromIST(ist)
+ settings=getDIMsettings('t')
+ 'set t 'ist
+ 'q time';DATE=subwrd(result,3)
+ 'set t 'settings
+return DATE
+
+#------------------------------------------------------
+#-- torna una variabile globale a partire dal valore grigliato (dim), dim vale X, Y, Z, T, E, le accetta anche in lowercase
+function getDIMsettings(dim)
+*'ga-> q dims'
+*'Default file number is: 1 '
+*'X is varying   Lon = -60 to 50   X = 1 to 441'
+*'Y is varying   Lat = 20 to 80   Y = 1 to 241'
+*'Z is fixed     Lev = 1000  Z = 1'
+*'T is fixed     Time = 00Z18OCT2019  T = 1'
+*'E is fixed     Ens = 1  E = 1'
+*'T is varying   Time = 00Z18OCT2019 to 00Z19OCT2019  T = 1 to 5'
+ if(dim='x');dim='X';endif
+ if(dim='y');dim='Y';endif
+ if(dim='z');dim='Z';endif
+ if(dim='e');dim='E';endif
+ if(dim='t');dim='T';endif
+ 'q dims'
+ ilin=1;while( subWrdLin(result,ilin,1)!=dim & ilin<100);ilin=ilin+1
+ endwhile
+ line=sublin(result,ilin)
+ if( subwrd(line,3)='fixed' )
+  settings=subwrd(line,9)
+ else
+  settings=subwrd(line,11)' 'subwrd(line,13)
+ endif
+return settings
+
+#----------------------------------------------------------------
+#-- converte una data in formato dato in UTC o in locale
+function dateConvert(date,format,toLocal)
+ if(toLocal='toLocal' | toLocal='');toLocal=0;endif
+#-- INPUT date examples:    'aug 11 2014 20:17', '2014/08/11 20:17', 'now', '20:17Z11Aug2014'
+#-- OUTPUT format examples: '%d/%m/%Y %H:%M' (2014/08/11 20:17), '%Y%m%d%H%M' (201408112017), '%H:%MZ%d%b%Y' (20:17Z11Aug2014), '%H:%M %d%b%Y' (20:17 11Aug2014
+#-- if toLocal=1 date is converted from UTC to Europe/Rome
+ if(toLocal)
+  timeZoneTo='TZ=Europe/Rome'
+  timeZoneFrom='UTC'
+ else
+  timeZoneTo=''
+  timeZoneFrom=''
+ endif
+ cmd=timeZoneTo' date --date "'date' 'timeZoneFrom'" +"'format'"'
+* say cmd
+* "shell '"cmd"'"
+return sublin(sys(cmd),1)
+
+#------------------------------------------------------
+#-- converte una data in formato DTRF (YYYYMMDD[hh[mn]]) a GrADS [hh[:mn]Z]DDMMMYYYY o viceversa
+#-- se complete=1 completa la data, esempio:
+#-- complete=0 => 20191129 -> 29NOV2019;         29NOV2019 -> 20191129
+#-- complete=1 => 20191129 -> 00:00Z29NOV2019;   29NOV2019 -> 201911290000
+function dtrf2grads(date,complete)
+ if(complete='' | complete='complete');complete=0;endif
+ if (valnum(date));reverse=0;else;reverse=1;endif
+ if(reverse=0)
+#-- da DTRF a GRADS
+  YYYY=substr(date,1,4)
+  MM=substr(date,5,2)
+  DD=substr(date,7,2)
+  HH=substr(date,9,2)
+  MN=substr(date,11,2)
+  if(MM='01');MMM='JAN';endif
+  if(MM='02');MMM='FEB';endif
+  if(MM='03');MMM='MAR';endif
+  if(MM='04');MMM='APR';endif
+  if(MM='05');MMM='MAY';endif
+  if(MM='06');MMM='JUN';endif
+  if(MM='07');MMM='JUL';endif
+  if(MM='08');MMM='AUG';endif
+  if(MM='09');MMM='SEP';endif
+  if(MM='10');MMM='OCT';endif
+  if(MM='11');MMM='NOV';endif
+  if(MM='12');MMM='DEC';endif
+  if(complete)
+   if(HH='');HH='00';endif
+   if(MN='');MN='00';endif
+  endif
+  if(HH='')
+   hour=''
+  else
+   if(MN='')
+    hour=HH'Z'
+   else
+    hour=HH':'MN'Z'
+   endif
+  endif
+*  say YYYY'.'MM'.'DD' 'HH':'MN
+  ret=hour%DD%MMM%YYYY
+ else
+#-- da GRADS a DTRF
+  dummy=wrdsep(date,'Z',' ')
+  if( subwrd(dummy,2)='' )
+   day=subwrd(dummy,1)
+   HH=''
+   MN=''
+  else
+   hour=subwrd(dummy,1)
+   day=subwrd(dummy,2)
+   dummy=wrdsep(hour,':',' ')
+   HH=subwrd(dummy,1)
+   MN=subwrd(dummy,2)
+  endif
+  if(complete)
+   if(HH='' | HH='HH');HH='00';endif
+   if(MN='' | MN='MN');MN='00';endif
+  endif
+  DD=substr(day,1,2)
+  MMM=substr(day,3,3)
+  YYYY=substr(day,6,4)
+  if(MMM='JAN');MM='01';endif
+  if(MMM='FEB');MM='02';endif
+  if(MMM='MAR');MM='03';endif
+  if(MMM='APR');MM='04';endif
+  if(MMM='MAY');MM='05';endif
+  if(MMM='JUN');MM='06';endif
+  if(MMM='JUL');MM='07';endif
+  if(MMM='AUG');MM='08';endif
+  if(MMM='SEP');MM='09';endif
+  if(MMM='OCT');MM='10';endif
+  if(MMM='NOV');MM='11';endif
+  if(MMM='DEC');MM='12';endif
+  ret=YYYY%MM%DD%HH%MN
+ endif
+ if(_DEBUG>1);say ret' <- libDate::dtrf2grads('date','complete')';endif
+return ret
+
+#------------------------------------------------------
+#-- torna il giorno della settimana a partire da anno mese e giorno o datagrads (se passo un solo argomento e' datagrads, se ne passo 3 sono yyyy mm dd)
+#-- da grads 2.1.1.b si puo' usare la funzione sys() al posto di shell
+function getWDay(arg1,arg2,arg3)
+ if(arg1='arg1' | arg1='')
+  type=0
+ else
+  if( (arg2='arg2' | arg2='') & (arg3='arg3' | arg3='') );type='datagrads';endif
+  if( (arg2!='arg2' | arg2!='') & (arg3!='arg3' | arg3!='') );type='yyyy-mm-dd';endif
+ endif
+ if(type='datagrads');command='date +%a -u --date='arg1;endif
+ if(type='yyyy-mm-dd');command='date +%a -u --date='arg1'-'arg2'-'arg3;endif
+ if(type)
+*  'shell "'command'"'
+  wDay=sublin(sys(command),1)
+*  wDay=sublin(result,1)
+ else
+  wDay=''
+  say 'getWDay('arg1','arg2','arg3') WARNING: INVALID args'
+ endif
+return wDay

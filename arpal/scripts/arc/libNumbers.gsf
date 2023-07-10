@@ -1,0 +1,126 @@
+#-----------------------------------------------------------------
+#-- libreria per la gestione dei numeri
+function libNumbers()
+ if(_DEBUG)
+  say 'sourcing libNumbers: sorted_string <- sort(string)'
+  say '                     reverted_string <- reverse(string)'
+  say '                     max <- getMax(string)'
+  say '                     min <- getMin(string)'
+  say '                     string <- array(start,end,incr)'
+  say '                     string <- getClevs(cmin,cmax,ncint,fmt)'
+  say '                     shifted_string <- shift(N,string)'
+  say '                     index <- getIndex(element,string)'
+ endif
+return
+
+#-----------------------------------------------------------------
+#-- sorta un array fatto da elementi separati da spazi
+function sort(string)
+#-- dalla stringa string passo al vettore array
+ i=0;while(1);i=i+1
+  elem=subwrd(string,i)
+  if(elem='');nel=i-1;break;endif
+  if( valnum(elem) )
+   array.i=elem
+  else
+   say 'ERROR: in sort('string') element <'elem'> is NOT a number'
+   return
+  endif
+ endwhile
+ if(nel<1)
+  say 'ERROR: in sort('string') - NO elements found'
+  return
+ endif
+#-- sorto array
+ sorted=0
+ while(!sorted)
+  sorted=1
+  i=1;while(i<nel);i=i+1;im=i-1
+   if(array.i < array.im)
+    temp=array.i
+    array.i=array.im
+    array.im=temp
+    sorted=0
+   endif
+  endwhile
+ endwhile
+#-- dal vettore array passo alla stringa string
+ ret=array.1
+ i=1;while(i<nel);i=i+1
+  ret=ret' 'array.i
+ endwhile
+ if(_DEBUG>1);say ret' <- libNumbers::sort('string')';endif
+return(ret)
+
+#-----------------------------------------------------------------
+#-- rovescia un array fatto da elementi separati da spazi
+function reverse(string)
+#-- dalla stringa string passo al vettore array
+ i=0;while(1);i=i+1
+  elem=subwrd(string,i)
+  if(elem='');nel=i-1;break;endif
+  array.i=elem
+ endwhile
+ if(nel<1)
+  say 'ERROR: in libNumbers::reverse('string') - NO elements found'
+  return
+ endif
+#-- giro array
+ ret=array.nel
+ i=nel;while(i>1);i=i-1
+  ret=ret' 'array.i
+ endwhile
+ if(_DEBUG>1);say ret' <- libNumbers::reverse('string')';endif
+return(ret)
+
+#-----------------------------------------------------------------
+#-- ritorna il massimo di un array fatto da elementi separati da spazi
+function getMax(string)
+ string=sort(string)
+ string=reverse(string)
+ ret=subwrd(string,1)
+ if(_DEBUG>1);say ret' <- libNumbers::getMax('string')';endif
+return ret
+
+#-----------------------------------------------------------------
+#-- ritorna il minimo di un array fatto da elementi separati da spazi
+function getMin(string)
+ string=sort(string)
+ ret=subwrd(string,1)
+ if(_DEBUG>1);say ret' <- libNumbers::getMin('string')';endif
+return ret
+
+#--------------------------------------------------------
+#-- torna una stringa contenente i numeri da start a end, incrementati by incr
+function array(start,end,incr,char)
+ if(char='char');char='';endif
+ if(incr='' | incr='incr');incr=1;endif
+ ret=char%start
+ i=start;while(i<end);i=i+incr
+  ret=ret' 'char%i
+ endwhile
+ if(_DEBUG>1);say ret' <- libNumbers::array('start','end','incr')';endif
+return ret
+
+#-----------------------------------------------------------------
+#-- a partire da due valori (cmin,cmax) e il numero di contour (ncint) torna il valore dei livelli di contour
+#-- funziona come array ma mentre li passo l'incremento qui incr viene dedotto da quanti elementi voglio
+function getClevs(cmin,cmax,ncint,fmt)
+ if(fmt='fmt' | fmt='');fmt='%.2f';endif
+ crange=cmax-cmin
+ cdelta=crange/(ncint-1)
+ i=0;while(i<ncint)
+  clev=math_format(fmt,cmin+i*cdelta)
+  if(!i);Clevs=clev;else;Clevs=Clevs' 'clev;endif
+ i=i+1;endwhile
+return Clevs
+
+#-----------------------------------------------------------------
+#-- elimina i primi N elementi del vettore (a stringa) string
+function shift(N,string)
+ len=linlen(string)
+ strout=subwrd(string,N+1)
+ i=N+1;while(i<len);i=i+1
+  strout=strout' '%subwrd(string,i)
+ endwhile
+return strout

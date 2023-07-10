@@ -239,7 +239,8 @@ install : $(UDXS) $(UDXT) $(PODS)
 	    /bin/cp -p $(PODS)               $(bindir)
         endif
         ifneq ($(GSFS), )
-	    /bin/cp -p $(GSFS)               $(gsfdir)
+	    /bin/cp -rp $(GSFS)              $(gsfdir)
+        endif
         endif
 
 html : $(HTMS)

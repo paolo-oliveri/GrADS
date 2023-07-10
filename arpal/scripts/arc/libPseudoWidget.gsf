@@ -1,0 +1,1060 @@
+#------------------------------------------------------------------
+#-- per creare degli pseudoWidget - utile per le versioni di grads che non prevedono draw button/dropmenu
+function libPseudoWidget()
+ if(_DEBUG)
+  say 'sourcing libPseudoWidget:'
+  say '  gId <- defButtonGroup(xlo,xhi,ylo,yhi,labels,direction,sep,def,gName,groupType)'
+  say '  NULL <- setButtonGroup(gId,onColText,onColFace,onColBack,onColFore,offColText,offColFace,offColBack,offColFore,thickness,sizeText)'
+  say '  NULL <- delButtonGroup(gId)'
+  say '  NULL <- drawButtonGroup(gId,wIdSelected)'
+  say '  wId <- defButton(xcenter,ycenter,width,height,wName,status,type,group)'
+  say '  NULL <- getAllWidget()'
+  say '  NULL <- drawAllWidget()'
+  say '  NULL <- drawButton(wId,status)'
+  say '  NULL <- setButton(wId,onColText,onColFace,onColBack,onColFore,offColText,offColFace,offColBack,offColFore,thickness,sizeText)'
+  say '  NULL <- drawWidId(wId,status)'
+  say '  NULL <- setWidgetStatus(wId,status)'
+  say '  value <- getWidgetInfo(wId,property)'
+  say '  wId <- getWidgetId(wName,gName)'
+  say '  gId <- getGroupId(gName)'
+  say '  value <- getGroupInfo(gId,property)'
+  say '  wId <- getWidgetClicked(xp,yp)'
+  say '  wId,gId,ib,xp,yp,zone,wName,widType,gName <- getClick(reDraw)'
+  say '  value <- parseClick(property)'
+  say '  wName <- moveActive(gId,direction,reDraw)'
+ endif
+return
+
+#------------------------------------------------------------------
+#-- definisce un gruppo di bottoni, torna il gId
+#-- dipendenze: defButton
+#--
+#-- per ciascun bottone coinvolto nel Group chiama la defButton
+#-- gId			-> il numero identificativo del gruppo
+#-- xlo,xhi,ylo,yhi	-> coordinate dello spazio occupato dall'intero gruppo
+#-- labels		-> etichette dei buttons
+#-- direction		-> il default e' horizontal
+#-- sep			-> la distanza separazione tra i button, il default e' 0.1
+#-- def			-> quale elemento selezionare (se applicabile) da 1 a nWid, il default e' 1, se passo 0 non setta un default
+#-- gName		-> nome del gruppo, di default lo metto uguale a gId
+#-- groupType		-> tipo del gruppo (checkButton|radioButton|dropMenu|stdButton) il default e' radioButton
+#--
+#-- dal numero di word di labels ricava nWid
+#--
+#-- gestise la variabile _WIDGRP.gId con tutte le info su il gruppo numero gId
+#--   _WIDGRP.gId.0 con l'elenco dei bottoni che comprende
+#--   _WIDGRP.gId.1 con il nome (opzionale) del gruppo
+#--   _WIDGRP.gId.2 con il tipo di widget: checkButton|radioButton|dropMenu|stdButton
+#--   _WIDGRP.gId.3 con il wId del widget di default
+#--   _WIDGRP.0 il numero di gId definiti
+function defButtonGroup(xlo,xhi,ylo,yhi,labels,direction,sep,def,gName,groupType)
+ funcname='libPseudoWidget::defButtonGroup'
+#-- definisco il nuovo gId
+ gId=getGroupInfo(0)+1
+ if(direction='direction' | direction='');direction='horizontal';endif
+ if(sep='sep' | sep='');sep=0.1;endif
+ if(gName='gName' | gName='');gName=gId;endif
+ if(groupType='groupType' | groupType='');groupType='radioButton';endif
+ if(def='def' | def='');def=1;endif
+ res=gId
+ if(_DEBUG>0);say res' <- 'funcname'('gId','xlo','xhi','ylo','yhi','labels','direction','sep','def','gName','groupType')';endif
+#-- checks
+ if(!valnum(xlo) | !valnum(xhi) | !valnum(ylo) | !valnum(yhi) | !valnum(sep))
+  say '!!! --------------------------------------------------------'
+  say funcname' INVALID xlo,xhi,ylo,yhi,sep='xlo','xhi','ylo','yhi','sep
+  say '!!! --------------------------------------------------------'
+  return
+ endif
+ if(xlo>xhi | ylo>yhi)
+  say '!!! --------------------------------------------------------'
+  say funcname' INVALID xlo,xhi,ylo,yhi='xlo','xhi','ylo','yhi
+  say '!!! --------------------------------------------------------'
+  return
+ endif
+ dummy=wrdsep(direction,'_')
+ direction=subwrd(dummy,1)
+ multiplier=subwrd(dummy,2)
+ if(multiplier='multiplier' | multiplier='');multiplier=1;endif
+ if(direction!='horizontal' & direction!='vertical')
+  say '!!! --------------------------------------------------------'
+  say funcname' INVALID direction='direction
+  say '!!! --------------------------------------------------------'
+  return
+ endif
+ if(valnum(multiplier)!=1)
+  say '!!! --------------------------------------------------------'
+  say funcname' INVALID multiplier='multiplier
+  say '!!! --------------------------------------------------------'
+  return
+ endif
+ nWid=linlen(labels)
+ if(def<0 | def>nWid)
+  say '!!! --------------------------------------------------------'
+  say funcname' INVALID nWid,def='nWid','def
+  say '!!! --------------------------------------------------------'
+  return
+ endif
+#-- doit
+ nWidMulti=math_int(nWid/multiplier)+math_mod(nWid,multiplier)
+
+#-- trovo la dimensione dei buttons
+ if(direction='horizontal')
+  width=(xhi-xlo-(nWid-1)*sep)/nWid
+  height=((yhi-ylo)-(multiplier-1)*sep)/multiplier
+ else
+  width=((xhi-xlo)-(multiplier-1)*sep)/multiplier
+  height=(yhi-ylo-(nWid-1)*sep)/nWid
+ endif
+ width=math_format('%.3f',width)
+ height=math_format('%.3f',height)
+#-- ciclo sui buttons
+#-- esempio di (i,j,k) per un horizontal_2
+#--  (4,1,1) (5,2,1) (6,3,1)
+#--  (1,1,0) (2,2,0) (3,3,0)
+ j=0;k=0
+ i=0;while(i<nWid);i=i+1
+  j=j+1
+  if(j=nWidMulti+1)
+   j=1
+   k=k+1
+  endif
+  wName=subwrd(labels,i)
+  if(direction='horizontal')
+   xcenter=xlo + width/2+(j-1)*(width+sep)
+   ycenter=ylo + height/2 + k*(height+sep)
+  else
+   xcenter=xlo + width/2 + k*(width+sep)
+   ycenter=ylo + height/2+(j-1)*(height+sep)
+  endif
+say '('i','j','k' -> 'xcenter' 'ycenter' 'wName
+
+  xcenter=math_format('%.3f',xcenter)
+  ycenter=math_format('%.3f',ycenter)
+  if(i=def & groupType='radioButton');status='on';else;status='off';endif
+  wId=defButton(xcenter,ycenter,width,height,wName,status,groupType,gId)
+  if(i=1);groupElems=wId;else;groupElems=groupElems' 'wId;endif
+ endwhile
+#-- memorizzo il gruppo su _WIDGRP
+ _WIDGRP.gId.0=groupElems
+ _WIDGRP.gId.1=gName
+ _WIDGRP.gId.2=groupType
+ if(_WIDGRP.0='_WIDGRP.0')
+  _WIDGRP.0=gId
+ else
+  if(_WIDGRP.0<gId);_WIDGRP.0=gId;endif
+ endif
+return res
+
+#------------------------------------------------------------------
+#-- per ciascuno degli elementi del gruppo gId setta la stessa configurazione di colori
+function setButtonGroup(gId,onColText,onColFace,onColBack,onColFore,offColText,offColFace,offColBack,offColFore,thickness,sizeText)
+ list=getGroupInfo(gId)
+ nWidget=linlen(list)
+ i=0;while(i<nWidget);i=i+1
+  wId=subwrd(list,i)
+  setButton(wId,onColText,onColFace,onColBack,onColFore,offColText,offColFace,offColBack,offColFore,thickness,sizeText)
+ endwhile
+return
+
+#------------------------------------------------------------------
+#-- cancella dalla memoria il gruppo gId. Non elimina i suoi elementi ma li smarca dal gruppo
+function delButtonGroup(gId)
+#-- checks
+ if(valnum(gId)!=1 | gId<1)
+  say '!!! --------------------------------------------------------'
+  say funcname' INVALID gId='gId' valnum:'
+  say '!!! --------------------------------------------------------'
+  return
+ endif
+ elems=getGroupInfo(gId)
+#-- doit
+#-- smarco i sui elementi dal gruppo se non l'ho ancora fatto
+ if(elems!='UNDEFINED')
+  wId=0;while(wId<linlen(elems));wId=wId+1
+   group=getWidgetInfo(wId,'group')
+   if(group=gId);_WIDGET.wId.18=0;endif
+  endwhile
+ endif
+#-- undifine il gruppo
+ i=-1;while(i<3);i=i+1
+  _WIDGRP.gId.i=_WIDGRP'.'gId'.'i
+ endwhile
+#-- smarco il gruppo dai possibili gruppi, se e' l'ultimo, altrimenti non lo posso cancellare
+ if(gId=_WIDGRP.0);_WIDGRP.0=gId-1;endif
+ say 'delButtonGroup('gId')  nGroup now is:'_WIDGRP.0
+return
+
+#------------------------------------------------------------------
+#-- gestisce il disegno di un buttonGroup
+#-- se non passo il wIdSelected lo disegna come precedentemente salvato
+#-- se passo il wIdSelected lo disegna selezionando il widget wIdSelected
+#-- dipendenze: setWidgetStatus drawWidId
+#--
+#-- gId			-> gruppo del radiobox, numero >0
+#-- wIdSelected	-> wId da rendere attivo
+#-- se wIdSelected non e' definito viene riproposto l'ultimo wIdSelected salvato, altrimenti viene salvato il nuovo wIdSelected e disegnato
+function drawButtonGroup(gId,wIdSelected)
+ funcname='libPseudoWidget::drawButtonGroup'
+ if(wIdSelected='wIdSelected' | wIdSelected='');wIdSelected=0;endif
+ if(_DEBUG>0);say 'NULL <- 'funcname'('gId','wIdSelected')';endif
+#-- checks
+ if(valnum(gId)!=1 | gId<1)
+  say '!!! --------------------------------------------------------'
+  say funcname' INVALID gId='gId' valnum:'
+  say '!!! --------------------------------------------------------'
+  return
+ endif
+ if(valnum(wIdSelected)!=1)
+  say '!!! --------------------------------------------------------'
+  say funcname' INVALID wIdSelected='wIdSelected
+  say '!!! --------------------------------------------------------'
+  return
+ endif
+#-- doit
+ groupElems=getGroupInfo(gId)
+ nWid=linlen(groupElems)
+#-- se passo un wIdSelected cambio i settaggi on/off del radioBox 
+ if(wIdSelected)
+  i=0;while(i<nWid);i=i+1
+   wId=subwrd(groupElems,i)
+   if(wId=wIdSelected)
+    setWidgetStatus(wId,'on')
+   else
+    setWidgetStatus(wId,'off')
+   endif
+  endwhile
+ endif
+#-- disegno gli elementi del radioBox secondo i settaggi previsti
+ i=0;while(i<nWid);i=i+1
+  wId=subwrd(groupElems,i)
+  drawWidId(wId)
+ endwhile
+return
+
+#------------------------------------------------------------------
+#-- definisce uno pseudoWidget di tipo Button, torna il wId
+#-- dipendenze: setButton
+#--
+#-- wId		-> pseudoWidget number
+#-- xcenter,ycenter	-> coordinate di pagina X,Y centraly su dove disegnare il widget
+#-- width,height	-> larghezza,altezza del widget nelle coordinate di pagina
+#-- wName		-> etichetta da sovrappore al widget
+#-- status		-> stato imposto: 'on', 'off', 'erase', 'delete', 'hide'
+#--  on = acceso, off = spento, erase = togli dalla finestra e dalla memoria, delete = solo dalla memoria, hide = solo dalla finestra
+#-- type		-> tipo di widget: 'checkButton', 'radioButton', 'dropMenu', 'stdButton'
+#-- group		-> nome del gruppo di riferimento, applicabile solo ai 'radioButton', 'dropMenu', 'checkGroup', 'stdGroup'
+#--
+#-- gestise la variabile _WIDGET.wId con tutte le info su il bottone numero wId
+#-- _WIDGET.0		-> il numero piu' alto di wId registrato
+#-- _WIDGET.wId.1-10	-> widget colors
+#-- _WIDGET.wId.11	-> xlo
+#-- _WIDGET.wId.12	-> xhi
+#-- _WIDGET.wId.13	-> ylo
+#-- _WIDGET.wId.14	-> yhi
+#-- _WIDGET.wId.15	-> wName
+#-- _WIDGET.wId.16	-> status
+#-- _WIDGET.wId.17	-> type
+#-- _WIDGET.wId.18	-> group
+function defButton(xcenter,ycenter,width,height,wName,status,type,group)
+ funcname='libPseudoWidget::defButton'
+ if(type='type' | type='');type='stdButton';endif
+ if(group='group' | group='');group=0;endif
+ if(status='status' | status='');status='off';endif
+#-- definisco il nuovo wId
+ wId=getWidgetInfo(0)+1
+ res=wId
+ if(_DEBUG>0);say res' <- 'funcname'('xcenter','ycenter','width','height','wName','status','type','group')';endif
+#-- checks
+ if(valnum(wId)!=1 | wId<1)
+  say '!!! --------------------------------------------------------'
+  say funcname' INVALID wId='wId
+  say '!!! --------------------------------------------------------'
+  return
+ endif
+ if(type!='checkButton' & type!='radioButton' & type!='stdButton' & type!='dropMenu')
+  say '!!! --------------------------------------------------------'
+  say funcname' INVALID type='type
+  say '!!! --------------------------------------------------------'
+  return
+ endif
+ if((type='radioButton' | type='dropMenu') & group=0) 
+  say '!!! --------------------------------------------------------'
+  say funcname' INVALID group='group' for type='type
+  say '!!! --------------------------------------------------------'
+  return
+ endif
+#-- doit
+ xlo=xcenter-width/2
+ xhi=xlo+width
+ ylo=ycenter-height/2
+ yhi=ylo+height
+#-- memorizzo i colori di default per il widget su _WIDGET.wId.1-10 a meno che li abbia gia' settati in precedenza
+ if(getWidgetInfo(wId,'onColText')='UNDEFINED')
+  setButton(wId)
+ endif
+#-- memorizzo le altre info per il widget su _WIDGET.wId.11-18
+ _WIDGET.wId.11=xlo
+ _WIDGET.wId.12=xhi
+ _WIDGET.wId.13=ylo
+ _WIDGET.wId.14=yhi
+ _WIDGET.wId.15=wName
+ _WIDGET.wId.16=status
+ _WIDGET.wId.17=type
+ _WIDGET.wId.18=group
+ if(_WIDGET.0='_WIDGET.0')
+  _WIDGET.0=wId
+ else
+  if(wId>_WIDGET.0);_WIDGET.0=wId;endif
+ endif
+return res
+
+#------------------------------------------------------------------
+#-- fa log di tutti i widget e i gruppi, usato solo per debug
+#-- dipendenze: getWidgetInfo getGroupInfo
+function getAllWidget()
+ funcname='libPseudoWidget::getAllWidget'
+ if(_DEBUG>1);say 'NULL <- 'funcname'()';endif
+ nWidget=getWidgetInfo(0)
+ say '# bottoni max ID: 'nWidget
+ wId=0;while(wId<nWidget);wId=wId+1
+#-- salto i widget undefiniti
+  if(getWidgetInfo(wId)='UNDEFINED');continue;endif
+  say getWidgetInfo(wId,'all')
+ endwhile
+ nGroup=getGroupInfo(0)
+ say '# gruppi max ID:  'nGroup
+ gId=0;while(gId<nGroup);gId=gId+1
+#-- salto i gruppi undefiniti
+  if(getGroupInfo(gId)='UNDEFINED');continue;endif
+  say getGroupInfo(gId,'all')
+ endwhile
+return
+
+#------------------------------------------------------------------
+#-- si occupa di disegnare tutti i widget secondo lo stato che hanno
+#-- dipendenze: getWidgetInfo drawButton
+function drawAllWidget()
+ funcname='libPseudoWidget::drawAllWidget'
+ if(_DEBUG>0);say 'NULL <- 'funcname'()';endif
+ nWidget=getWidgetInfo(0)
+ wId=0;while(wId<nWidget);wId=wId+1
+#-- salto i widget undefiniti
+  if(getWidgetInfo(wId)='UNDEFINED');continue;endif
+  drawButton(wId)
+ endwhile
+return
+
+#------------------------------------------------------------------
+#-- gestisce il disegno del widget
+#-- dipendenze: getWidgetInfo getWidgetInfo drawButton drawWidId setWidgetStatus
+#--
+#-- wId		-> pseudoWidget number
+#-- status	-> stato imposto: 'on', 'off', 'erase', 'delete', 'hide', 'toggle', 'status', 'std'
+#-- se status non e' definito viene riproposto l'ultimo stato salvato, altrimenti viene salvato il nuovo stato e disegnato
+function drawButton(wId,status)
+ funcname='libPseudoWidget::drawButton'
+ if(_DEBUG>0);say 'NULL <- 'funcname'('wId','status')';endif
+#-- checks
+ if(valnum(wId)!=1 | wId<1)
+  say '!!! --------------------------------------------------------'
+  say funcname' INVALID wId='wId
+  say '!!! --------------------------------------------------------'
+  return
+ endif
+#-- doit
+ oldStatus=getWidgetInfo(wId,'status')
+#-- non passo lo stato: disegna il widget come e' stato configurato precedentemente
+ if(status='status' | status='')
+  status=oldStatus
+  drawButton(wId,status)
+  drawWidId(wId)
+  return
+ endif
+#-- passo lo stato: disegno secondo lo stato passato
+#-- stato on|off
+ if(status='on' | status='off')
+  setWidgetStatus(wId,status)
+  drawWidId(wId)
+  return
+ endif
+#-- stato erase
+ if(status='erase')
+  drawWidId(wId,'hide')
+  drawWidId(wId,'delete')
+  return
+ endif
+#-- delete but not cancel from display
+#-- tipo di button e stato alternativo
+ type=getWidgetInfo(wId,'type')
+ if(oldStatus='off');newStatus='on';endif
+ if(oldStatus='on');newStatus='off';endif
+* say 'wId:'wId' status:'status' newStatus:'newStatus
+#-- stdButton: pulse once
+ if(type='stdButton' & (status='pulse' | status='std'))
+  drawWidId(wId,newStatus)
+  '!sleep 0.1'
+  drawWidId(wId)
+  return
+ endif
+#-- checkButton: toggle
+ if(type='checkButton' & (status='toggle' | status='std'))
+  setWidgetStatus(wId,newStatus)
+  drawWidId(wId)
+  return
+ endif
+#-- erase
+ if(status='erase')
+   drawWidId(wId,'hide')
+   drawWidId(wId,'delete')
+  return
+ endif
+#-- delete but not cancel from display
+ drawWidId(wId,status)
+return
+
+#------------------------------------------------------------------
+#-- gestisce i settaggi del colore del bottone numero wId
+#-- _WIDGET.wId.1	-> onColText
+#-- _WIDGET.wId.2	-> onColFace
+#-- _WIDGET.wId.3	-> onColBack
+#-- _WIDGET.wId.4	-> onColFore
+#-- _WIDGET.wId.5	-> offColText
+#-- _WIDGET.wId.6	-> offColFace
+#-- _WIDGET.wId.7	-> offColBack
+#-- _WIDGET.wId.8	-> offColFore
+#-- _WIDGET.wId.9	-> thickness
+#-- _WIDGET.wId.10	-> sizeText
+#--
+#--                           / ColFace
+#   ColFore |--------------- /
+#           |.............../|
+#           |.....ColText....|
+#           |................|
+#             _______________| ColBack
+#--
+function setButton(wId,onColText,onColFace,onColBack,onColFore,offColText,offColFace,offColBack,offColFore,thickness,sizeText)
+ funcname='libPseudoWidget::setButton'
+ if(onColText  != '' & onColText  != 'onColText'); setb.1=onColText; endif
+ if(onColFace  != '' & onColFace  != 'onColFace'); setb.2=onColFace; endif
+ if(onColBack  != '' & onColBack  != 'onColBack'); setb.3=onColBack; endif
+ if(onColFore  != '' & onColFore  != 'onColFore'); setb.4=onColFore; endif
+ if(offColText != '' & offColText != 'offColText');setb.5=offColText;endif
+ if(offColFace != '' & offColFace != 'offColFace');setb.6=offColFace;endif
+ if(offColBack != '' & offColBack != 'offColBack');setb.7=offColBack;endif
+ if(offColFore != '' & offColFore != 'offColFore');setb.8=offColFore;endif
+ if(thickness  != '' & thickness  != 'thickness'); setb.9=thickness; endif
+ if(sizeText   != '' & sizeText   != 'sizeText'); setb.10=sizeText;  endif
+ if(_DEBUG>0)
+  say 'NULL <- 'funcname'('wId','onColText','onColFace','onColBack','onColFore','offColText','offColFace','offColBack','offColFore','thickness','sizeText')'
+ endif
+ say funcname'('wId','onColText','onColFace','onColBack','onColFore','offColText','offColFace','offColBack','offColFore','thickness','sizeText')'
+ 'set rgb 201 145 145 140'
+ 'set rgb 202 182 182 179'
+ 'set rgb 203 223 223 222'
+ 'set rgb 204 163 163 161'
+ if(setb.1='setb.1');setb.1=4;      endif;#onColText
+ if(setb.2='setb.2');setb.2=203;    endif;#onColFace
+ if(setb.3='setb.3');setb.3=201;    endif;#onColBack
+ if(setb.4='setb.4');setb.4=202;    endif;#onColFore
+ if(setb.5='setb.5');setb.5=1;      endif;#offColText
+ if(setb.6='setb.6');setb.6=204;    endif;#offColFace
+ if(setb.7='setb.7');setb.7=202;    endif;#offColBack
+ if(setb.8='setb.8');setb.8=201;    endif;#offColFore
+ if(setb.9='setb.9');setb.9=12;     endif;#thickness
+ if(setb.10='setb.10');setb.10=0.11;endif;#sizeText
+ i=0;while(i<10);i=i+1
+*  say 'wId:'wId' i:'i
+*  say '_WIDGET.'wId'.'i'='setb.i
+  _WIDGET.wId.i=setb.i
+ endwhile
+return
+
+#------------------------------------------------------------------
+#-- disegna davvero il widget
+#-- dipendenze: getWidgetInfo
+#-- wId		-> pseudoWidget number
+#-- status		-> stato imposto: 'on', 'off', 'delete', 'hide', 'status'
+function drawWidId(wId,status)
+ funcname='libPseudoWidget::drawWidId'
+ if(_DEBUG>0);say 'NULL <- 'funcname'('wId','status')';endif
+#-- checks
+ if(valnum(wId)!=1)
+  say '!!! --------------------------------------------------------'
+  say funcname' INVALID wId='wId
+  say '!!! --------------------------------------------------------'
+  return
+ endif
+#-- delete but not cancel from display
+ if(status='delete')
+  _WIDGET.wId.11='deleted'
+  return
+ endif
+ thk=getWidgetInfo(wId,'thk')
+ siz=getWidgetInfo(wId,'siz')
+ xlo=getWidgetInfo(wId,'xlo')
+ xhi=getWidgetInfo(wId,'xhi')
+ ylo=getWidgetInfo(wId,'ylo')
+ yhi=getWidgetInfo(wId,'yhi')
+ wName=getWidgetInfo(wId,'name')
+ if(status='status' | status='');status=getWidgetInfo(wId);endif
+#-- hide (cancel from display but button it remains active)
+ if(status='hide')
+  'set line 0'
+  delta=0.02
+  xlo=xlo-delta
+  xhi=xhi+delta
+  ylo=ylo-delta
+  yhi=yhi+delta
+  'draw recf 'xlo' 'ylo' 'xhi' 'yhi
+  return
+ endif
+#-- on / off
+* say funcname' xc:'xcenter' yc:'ycenter' w:'width' h:'height' xl:'xlo' xh:'xhi' yl:'ylo' yh:'yhi
+*say '>>> xcenter=('xlo'+'xhi')/2'
+ xcenter=(xlo+xhi)/2
+ ycenter=(ylo+yhi)/2
+ width=xhi-xlo
+ height=yhi-ylo
+* say funcname' xc:'xcenter' yc:'ycenter' w:'width' h:'height' xl:'xlo' xh:'xhi' yl:'ylo' yh:'yhi
+ if(status='on' | status='off')
+  colText=getWidgetInfo(wId,status'ColText')
+  colFace=getWidgetInfo(wId,status'ColFace')
+  colBack=getWidgetInfo(wId,status'ColBack')
+  colFore=getWidgetInfo(wId,status'ColFore')
+ endif
+#-- face
+* say 'set line 'colFace' 1 'thk
+ 'set line 'colFace' 1 'thk
+ 'draw recf 'xlo' 'ylo' 'xhi' 'yhi
+#-- background: corner SE
+* say 'set line 'colBack
+ 'set line 'colBack
+ 'draw line 'xlo' 'ylo' 'xhi' 'ylo
+ 'draw line 'xhi' 'ylo' 'xhi' 'yhi
+#-- foreground: corner NW
+* say 'set line 'colFore
+ 'set line 'colFore
+ 'draw line 'xlo' 'yhi' 'xhi' 'yhi
+ 'draw line 'xlo' 'ylo' 'xlo' 'yhi
+#-- text
+* say 'set string 'colText' c'
+ 'set string 'colText' c'
+ 'set strsiz 'siz
+ 'draw string 'xcenter' 'ycenter' 'wName
+return
+
+#------------------------------------------------------------------
+#-- setta lo stato dello pseudoWidget wId
+#-- dipendenze: getWidgetInfo
+#--
+#-- wId		-> pseudoWidget number
+#-- status		-> stato imposto: 'on', 'off', 'hide'
+function setWidgetStatus(wId,status)
+ funcname='libPseudoWidget::setWidgetStatus'
+ if(_DEBUG>0);say 'NULL <- 'funcname'('wId','status')';endif
+#-- checks
+ if(status!='on' & status!='off' & status!='hide')
+  say '!!! --------------------------------------------------------'
+  say funcname' INVALID status='status
+  say '!!! --------------------------------------------------------'
+  return
+ endif
+ if(valnum(wId)!=1)
+  say '!!! --------------------------------------------------------'
+  say funcname' INVALID wId='wId
+  say '!!! --------------------------------------------------------'
+  return
+ endif
+#-- doit
+ _WIDGET.wId.16=status
+ if(status='on')
+  gId=getWidgetInfo(wId,'group')
+  if(gId)
+   _WIDGRP.gId.3=wId
+  endif
+ endif
+return
+
+#------------------------------------------------------------------
+#-- torna le info sullo pseudoWidget wId
+#-- wId		-> pseudoWidget number
+#-- property	-> status,type,group (default: status)
+#-- se wId=0 torna il numero di widget presenti
+function getWidgetInfo(wId,property)
+ funcname='libPseudoWidget::getWidgetInfo'
+ if(property='property' | property='');property='status';endif
+#-- checks
+ if(valnum(wId)!=1)
+  say '!!! --------------------------------------------------------'
+  say funcname' INVALID wId='wId
+  say '!!! --------------------------------------------------------'
+  return
+ endif
+ if(!checkList(property,'onColText onColFace onColBack onColFore offColText offColFace offColBack offColFore thk siz xlo xhi ylo yhi name status type group all'))
+  say '!!! --------------------------------------------------------'
+  say funcname' INVALID property='property
+  say '!!! --------------------------------------------------------'
+  return
+ endif
+#-- doit
+#-- case construct
+ while(doOnce);doOnce=0
+  if(wId=0)
+   res=_WIDGET.0
+   if(valnum(res)!=1);res=0;endif
+   continue
+  endif
+  if(property='onColText')
+   res=_WIDGET.wId.1
+   continue
+  endif
+  if(property='onColFace')
+   res=_WIDGET.wId.2
+   continue
+  endif
+  if(property='onColBack')
+   res=_WIDGET.wId.3
+   continue
+  endif
+  if(property='onColFore')
+   res=_WIDGET.wId.4
+   continue
+  endif
+  if(property='offColText')
+   res=_WIDGET.wId.5
+   continue
+  endif
+  if(property='offColFace')
+   res=_WIDGET.wId.6
+   continue
+  endif
+  if(property='offColBack')
+   res=_WIDGET.wId.7
+   continue
+  endif
+  if(property='offColFore')
+   res=_WIDGET.wId.8
+   continue
+  endif
+  if(property='thk')
+   res=_WIDGET.wId.9
+   continue
+  endif
+  if(property='siz')
+   res=_WIDGET.wId.10
+   continue
+  endif
+  if(property='xlo')
+   res=_WIDGET.wId.11
+   continue
+  endif
+  if(property='xhi')
+   res=_WIDGET.wId.12
+   continue
+  endif
+  if(property='ylo')
+   res=_WIDGET.wId.13
+   continue
+  endif
+  if(property='yhi')
+   res=_WIDGET.wId.14
+   continue
+  endif
+  if(property='name')
+   res=_WIDGET.wId.15
+   continue
+  endif
+  if(property='status')
+   res=_WIDGET.wId.16
+   continue
+  endif
+  if(property='type')
+   res=_WIDGET.wId.17
+   continue
+  endif
+  if(property='group')
+   res=_WIDGET.wId.18
+   continue
+  endif
+  if(property='all')
+   res='wId:<'wId'>'
+   res=res' thk:<'getWidgetInfo(wId,'thk')'>'
+   res=res' siz:<'getWidgetInfo(wId,'siz')'>'
+   res=res' xlo:<'getWidgetInfo(wId,'xlo')'>'
+   res=res' xhi:<'getWidgetInfo(wId,'xhi')'>'
+   res=res' ylo:<'getWidgetInfo(wId,'ylo')'>'
+   res=res' yhi:<'getWidgetInfo(wId,'yhi')'>'
+   res=res' name:<'getWidgetInfo(wId,'name')'>'
+   res=res' status:<'getWidgetInfo(wId,'status')'>'
+   res=res' type:<'getWidgetInfo(wId,'type')'>'
+   res=res' group:<'getWidgetInfo(wId,'group')'>'
+   res=res' onCol:<'getWidgetInfo(wId,'onColText')' 'getWidgetInfo(wId,'onColFace')' 'getWidgetInfo(wId,'onColBack')' 'getWidgetInfo(wId,'onColFore')'>'
+   res=res' offCol:<'getWidgetInfo(wId,'offColText')' 'getWidgetInfo(wId,'offColFace')' 'getWidgetInfo(wId,'offColBack')' 'getWidgetInfo(wId,'offColFore')'>'
+   continue
+  endif
+ endwhile
+#-- end case construct
+ check=substr(res,1,8)
+ if(check='_WIDGET.');res='UNDEFINED';endif
+ if(_DEBUG>1);say res' <- 'funcname'('wId','property')';endif
+return res
+
+#------------------------------------------------------------------
+#-- torna il wId del button wName
+#-- wName	-> pseudoWidget Button name
+#-- gName	-> pseudoWidget Group name
+#-- se passo anche gName la ricerca viene limitata a quel gruppo, altrimenti a tutti i widget
+function getWidgetId(wName,gName)
+ funcname='libPseudoWidget::getWidgetId'
+#-- checks
+ if(wName='wName' | wName='')
+  say '!!! --------------------------------------------------------'
+  say funcname' INVALID wName='wName
+  say '!!! --------------------------------------------------------'
+  return
+ endif
+#-- doit
+#-- creo una lista con dentro solo il gruppo
+ if(gName!='gName' & gName!='')
+  gId=getGroupId(gName)
+  list=getGroupInfo(gId)
+  nWidget=linlen(list)
+#-- creo una lista con dentro tutti i widget
+ else
+  nWidget=getWidgetInfo(0)
+  list=array(1,nWidget)
+ endif
+#-- guardo la lista
+ i=0;while(i<nWidget);i=i+1
+  wId=subwrd(list,i)
+  if(wName= getWidgetInfo(wId,'name') )
+   res=wId
+   break
+  endif
+ endwhile
+ if(_DEBUG>1);say res' <- 'funcname'('wName','gName')';endif
+return res
+
+#------------------------------------------------------------------
+#-- torna il gId del buttonGroup gName
+#-- gName	-> pseudoWidget Group name
+function getGroupId(gName)
+ funcname='libPseudoWidget::getGroupId'
+#-- checks
+ if(gName='gName' | gName='')
+  say '!!! --------------------------------------------------------'
+  say funcname' INVALID gName='gName
+  say '!!! --------------------------------------------------------'
+  return
+ endif
+#-- doit
+ res=0
+ nGroup=getGroupInfo(0)
+ gId=0;while(gId<nGroup);gId=gId+1
+  if(gName= getGroupInfo(gId,'name') )
+   res=gId
+   break
+  endif
+ endwhile
+ if(_DEBUG>1);say res' <- 'funcname'('gName')';endif
+return res
+
+#------------------------------------------------------------------
+#-- torna le info sullo pseudoWidget gId
+#-- gId		-> pseudoWidget Group number
+#-- property	-> name,type,list,all (default: list)
+#-- se gId=0 torna il numero di gruppi presenti
+#-- property=name torna il nome del gruppo
+#-- property=type torna il tipo del gruppo, come radioBox
+#-- property=list torna la lista dei widget appartenenti al gruppo
+#-- property=status torna la lista degli stati associati ai widget appartenenti al gruppo
+#-- property=active torna l'unico widget attivo del gruppo, ha senso solo per un radioBox
+function getGroupInfo(gId,property)
+ funcname='libPseudoWidget::getGroupInfo'
+ if(property='property' | property='');property='list';endif
+#-- checks
+ if(valnum(gId)!=1)
+  say '!!! --------------------------------------------------------'
+  say funcname' INVALID gId='gId
+  say '!!! --------------------------------------------------------'
+  return
+ endif
+ if(!checkList(property,'name type list active status all'))
+  say '!!! --------------------------------------------------------'
+  say funcname' INVALID property='property
+  say '!!! --------------------------------------------------------'
+  return
+ endif
+#-- doit
+#-- case construct
+ while(doOnce);doOnce=0
+  if(gId=0)
+   res=_WIDGRP.0
+   if(valnum(res)!=1);res=0;endif
+   continue
+  endif
+  if(property='list')
+   res=_WIDGRP.gId.0
+   continue
+  endif
+  if(property='status')
+   groupElems=getGroupInfo(gId,'list')
+   nElems=linlen(groupElems)
+   i=0;while(i<nElems);i=i+1
+    wId=subwrd(groupElems,i)
+    wStatus=getWidgetInfo(wId,'status')
+    if(res='res');res=wStatus;else;res=res' 'wStatus;endif
+   endwhile
+   continue
+  endif
+  if(property='name')
+   res=_WIDGRP.gId.1
+   continue
+  endif
+  if(property='type')
+   res=_WIDGRP.gId.2
+   continue
+  endif
+  if(property='active')
+   res=_WIDGRP.gId.3
+   continue
+  endif
+  if(property='all')
+   res='gId:<'gId'>'
+   res=res' list:<'getGroupInfo(gId,'list')'>'
+   res=res' active:<'getGroupInfo(gId,'active')'>'
+   res=res' name:<'getGroupInfo(gId,'name')'>'
+   res=res' type:<'getGroupInfo(gId,'type')'>'
+   continue
+  endif
+ endwhile
+#-- end case construct
+ check=substr(res,1,8)
+ if(check='_WIDGRP.');res='UNDEFINED';endif
+ if(_DEBUG>1);say res' <- 'funcname'('gId','property')';endif
+return res
+
+#------------------------------------------------------------------
+#-- torna il wId del widget schiacciato, 0 se nessuno
+#-- dipendenze: getWidgetInfo
+#--
+#-- xp,xp	-> coordinate di pagina
+function getWidgetClicked(xp,yp)
+ funcname='libPseudoWidget::getWidgetClicked'
+ res=0
+ nWidget=getWidgetInfo(0)
+ wId=0;while(wId<nWidget);wId=wId+1
+  xlo=getWidgetInfo(wId,'xlo')
+  if(xlo!='UNDEFINED' & xlo!='deleted')
+   xhi=getWidgetInfo(wId,'xhi')
+   ylo=getWidgetInfo(wId,'ylo')
+   yhi=getWidgetInfo(wId,'yhi')
+   if(_DEBUG>1);say funcname' wId:'wId' X: 'xlo' < 'xp' < 'xhi'  Y: 'ylo' < 'yp' < 'yhi;endif
+   if(xp>=xlo & xp<=xhi & yp>=ylo & yp<=yhi)
+    res=wId
+    break
+   endif
+  endif
+ endwhile
+ if(_DEBUG>0);say res' <- 'funcname'('xp','yp')';endif
+return res
+
+#------------------------------------------------------------------
+#-- fa una query bpos e torna le info:
+#-- torna il wId del widget schiacciato (0 se nessuno), il gruppo (0 se nessuno), il numero del mouseButton usato, le coordinate di pagina, il settore scelto
+#-- dipendenze: getWidgetInfo getWidgetClicked
+#--
+#-- reDraw	-> se 1 ridisegna il widget selezionato (nel caso che) secondo la modalita' std
+function getClick(reDraw)
+ funcname='libPseudoWidget::getClick'
+ if(reDraw='reDraw' | reDraw='');reDraw=1;endif
+ res=0
+ 'q bpos'
+ xp=subwrd(result,3);yp=subwrd(result,4);ib=subwrd(result,5)
+#-- trovo la parea
+ parea=getParea()
+ xp1=subwrd(parea,1);yp1=subwrd(parea,2);xp2=subwrd(parea,3);yp2=subwrd(parea,4)
+#-- sono su un bottone?
+ wId=getWidgetClicked(xp,yp)
+ if(wId)
+#-- get widget info
+  gId=getWidgetInfo(wId,'group')
+  gName=getGroupInfo(gId,'name')
+  groupType=getGroupInfo(gId,'type')
+  wName=getWidgetInfo(wId,'name')
+  widType=getWidgetInfo(wId,'type')
+ else
+  gId=0
+  gName=0
+  groupType=0
+  wName=0
+  widType=0
+ endif
+#-- sono sulla mappa principale (NW)
+ if(xp>xp1 & xp<xp2 & yp>yp1 & yp<yp2)
+  zone='MAP'
+ endif
+#-- sono sul riquadro E
+ if(xp>xp2 & yp>yp1 & yp<yp2)
+  zone='E'
+ endif
+#-- sono sul riquadro NE
+ if(xp>xp2 & yp>yp2)
+  zone='NE'
+ endif
+#-- sono sul riquadro N
+ if(xp>xp1 & xp<xp2 & yp>yp2)
+  zone='N'
+ endif
+#-- sono sul riquadro NW
+ if(xp<xp1 & yp>yp2)
+  zone='NW'
+ endif
+#-- sono sul riquadro W
+ if(xp<xp1 & yp>yp1 & yp<yp2)
+  zone='W'
+ endif
+#-- sono sul riquadro SW
+ if(xp<xp1 & yp<yp1)
+  zone='SW'
+ endif
+#-- sono sul riquadro S
+ if(xp>xp1 & xp<xp2 & yp<yp1)
+  zone='S'
+ endif
+#-- sono sul riquadro SE
+ if(xp>xp2 & yp<yp1)
+  zone='SE'
+ endif
+#-- reDraw if requested
+ if(reDraw)
+#-- ho preso un bottone che non appartiene a nessun gruppo
+  if(wId & !gId)
+   drawButton(wId,'std')
+  endif
+#-- ho preso un bottone che appartiene a un gruppo
+  if(wId & gId)
+   if(groupType='radioButton')
+    drawButtonGroup(gId,wId)
+   else
+    drawButton(wId,'std')
+   endif
+  endif
+ endif
+#-- finish
+ _CLICKED=wId' 'gId' 'ib' 'xp' 'yp' 'zone' 'wName' 'widType' 'gName
+ if(_DEBUG);say '_CLICKED='_CLICKED' <- 'funcname'('reDraw')';endif
+return
+
+#------------------------------------------------------------------
+#-- parsifica il risultato di getClick memorizzato in _CLICKED
+#-- torna la voce selezionata
+#--
+#-- property	-> una delle voci tra wId,gId,ib,xp,yp,zone,wName,widType,gName
+function parseClick(property)
+ funcname='libPseudoWidget::parseClick'
+#-- checks
+ if(property='property' | property='property');property=wId;endif
+ if(!checkList(property,'wId gId ib xp yp zone wName widType gName'))
+  say '!!! --------------------------------------------------------'
+  say funcname' INVALID property='property
+  say '!!! --------------------------------------------------------'
+  return
+ endif
+#-- case construct
+ while(doOnce);doOnce=0
+  if(property='wId')
+   res=subwrd(_CLICKED,1)
+   continue
+  endif
+  if(property='gId')
+   res=subwrd(_CLICKED,2)
+   continue
+  endif
+  if(property='ib')
+   res=subwrd(_CLICKED,3)
+   continue
+  endif
+  if(property='xp')
+   res=subwrd(_CLICKED,4)
+   continue
+  endif
+  if(property='yp')
+   res=subwrd(_CLICKED,5)
+   continue
+  endif
+  if(property='zone')
+   res=subwrd(_CLICKED,6)
+   continue
+  endif
+  if(property='wName')
+   res=subwrd(_CLICKED,7)
+   continue
+  endif
+  if(property='widType')
+   res=subwrd(_CLICKED,8)
+   continue
+  endif
+  if(property='gName')
+   res=subwrd(_CLICKED,9)
+   continue
+  endif
+ endwhile
+#-- end case construct
+return res
+
+#------------------------------------------------------------------
+#-- sposta l'elemento attivo di un group di 1 elemento, senza uscire dal gruppo
+#-- torna il wName del nuovo elemento
+#--
+#-- gId		-> pseudoWidget Group number
+#-- direction	-> sposta l'elemento attivo verso l'alto/dx (up) o basso/sx (down)
+#-- reDraw	-> se 1 ridisegna il widget selezionato (nel caso che) secondo la modalita' std
+function moveActive(gId,direction,reDraw)
+ funcname='libPseudoWidget::moveActive'
+ groupType=getGroupInfo(gId,'type')
+#-- checks
+ if(reDraw='reDraw' | reDraw='');reDraw=1;endif
+ if(valnum(gId)!=1)
+  say '!!! --------------------------------------------------------'
+  say funcname' INVALID gId='gId
+  say '!!! --------------------------------------------------------'
+  return
+ endif
+ if(!checkList(direction,'up down'))
+  say '!!! --------------------------------------------------------'
+  say funcname' INVALID direction='direction
+  say '!!! --------------------------------------------------------'
+  return
+ endif
+ if(groupType!='radioButton')
+  say '!!! --------------------------------------------------------'
+  say funcname' INVALID gId: groupType='groupType
+  say '!!! --------------------------------------------------------'
+  return
+ endif
+ groupElems=getGroupInfo(gId,'list')
+ nElems=linlen(groupElems)
+ active=getGroupInfo(gId,'active')
+ i=0;while(i<nElems);i=i+1
+  wId=subwrd(groupElems,i)
+  say 'i:'i' wId:'wId' active:'active' list:'groupElems
+  if(wId=active);break;endif
+ endwhile
+ newI=0
+ if(direction='up' & i<nElems)
+  newI=i+1
+ endif
+ if(direction='down' & i>1)
+  newI=i-1
+ endif
+ if(newI)
+  say 'setWidgetStatus('wId',off)'
+  wId=subwrd(groupElems,newI)
+#-- reDraw if requested
+  if(reDraw)
+   drawButtonGroup(gId,wId)
+  endif
+ endif
+ res=getWidgetInfo(wId,'name')
+return res

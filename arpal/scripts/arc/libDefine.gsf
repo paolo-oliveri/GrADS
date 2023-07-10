@@ -1,0 +1,128 @@
+#-----------------------------------------------------------------
+#-- libreria per il define di variabili composte da piu' campi da assegnare ai diversi valori della dimensione scelta
+function libDefine()
+ if(_DEBUG)
+  say 'sourcing libDefine: ylabs <- pres2height(defvarname,varOnP,zvar,zmin,zmax,zint) trasforma varOnP in defvarname (da z=pressione a z=quota)'
+  say '                    NULL <- spanOverE(defvarname,fields,undef2) definisce defvarname con i fields lungo la dimensione e'
+ endif
+return
+
+#------------------------------------------------------------
+#-- prende in input una variabile <varOnP> definita su livelli di pressione e la trasforma sui livelli geometrici
+#-- necessita della variabile geometrica <zvar>, tipicamente 'gh'
+#-- i livelli geometrici sono equispaziati di <zint> da <zmin> a <zmax>
+#-- la nuova variabile, <varOnZ>, rimane quindi definita sulla coordinata 'e' che varia da 1 a (zmax-zmin)/zint+1
+#-- torna le labels da mettere sull'asse y con set ylabs
+function pres2height(varOnZ,varOnP,zvar,zmin,zmax,zint)
+ funcname='libDefine::pres2height('varOnZ','varOnP','zvar','zmin','zmax','zint')'
+ say funcname
+#-- checks
+ if(varOnZ='varOnZ' | varOnZ='')
+  say 'ERROR: in 'funcname' varOnZ <'varOnZ'> is INVALID'
+  return
+ endif
+ if(varOnP='varOnP' | varOnP='')
+  say 'ERROR: in 'funcname' varOnP <'varOnP'> is INVALID'
+  return
+ endif
+ if(zvar='zvar' | zvar='')
+  say 'ERROR: in 'funcname' zvar <'zvar'> is INVALID'
+  return
+ endif
+ if(!valnum(zmin) | !valnum(zmax) | !valnum(zint))
+  say 'ERROR: in 'funcname' zmin/zmax/zint <'zmin'/'zmax'/'zint'> is INVALID'
+  return
+ endif
+#-- definisco i fields da inserire nella variabile 3D
+ nzlevs=linlen(zlevs)
+ i=0;zlev=zmin-zint;while(zlev<zmax);i=i+1;zlev=zlev+zint
+  if(i=1)
+   fields='zinterp('varOnP','zvar','zlev')'
+   labels=zlev
+  else
+   fields=fields' zinterp('varOnP','zvar','zlev')'
+   labels=labels'|'zlev
+  endif
+ endwhile
+#-- definisco la variabile 3D
+ spanOverE(varOnZ,fields,'none')
+return labels
+
+#------------------------------------------------------------
+#-- per assegnare ad una nuova variabile definita <defvarname> la nuova dimensione e
+#--   e riempire questa dimensione con i campi <fields> (separati da spazi)
+#--   undef2 e' un valore temporaneo di undef, se non lo passo il def e' -99999999, se metto none non lo usa
+#--   usando undef2 si riescono a mantenere i valori undef originali dei campi <fields>
+#-- problema: se usassi 'z' come dimensione funziona ma la nuova variabile 3D e' definita ai livelli di zdef, normalmente non equispaziati
+#-- se uso 'e' sono equispaziati ma non essendo definita la variabile ENS (mentre LEV lo e') non riesco a farlo on the fly
+#-- a meno di aprire un file in cui sia definita (edim.ctl)
+function spanOverE(defvarname,fields,undef2)
+ say 'spanOverE('defvarname','fields','undef2')'
+ runTime('init')
+ unit=openFile('../data/edim.ctl')
+ if(!unit);say funcname' ERROR on open edim.ctl';return;endif
+* eeevar='eee.'unit'(x=1,y=1,t=1)'
+ eeevar='bterp(eee.'unit'(t=1),lon)'
+ funcname='libDefine::spanOver'
+ if(fields='' | fields='fields');say funcname' ERROR on fields';return;endif
+ nfields=linlen(fields)
+ if(undef2='' | undef2='undef2');undef2=-99999999;endif
+ setfixed='set e 1'
+ setvarying='set e 1 'nfields
+
+#-- definisco la variabile in uscita <defvarname> piena di zeri
+* say setvarying
+ setvarying
+ deftmp='define 'defvarname'=const(lon,0)'
+* say deftmp
+ deftmp
+ if(rc);say funcname' ERROR4 on 'deftmp;return;endif
+ say 'variable <'defvarname'> spanning over <e> from 1 to 'nfields' initialized'
+
+#-- ciclo sui fields: ne inserisco uno alla volta sulla dimensione 'e'
+ ifield=0;while(ifield<nfields);ifield=ifield+1
+  field=subwrd(fields,ifield)
+
+#-- definisco il campo
+*  say setfixed
+  setfixed
+  if(undef2='none');deftmp='define tmp000='field;else;deftmp='define tmp000=const('field','undef2',-u)';endif
+*  say deftmp
+  deftmp
+  if(rc);say funcname' ERROR2 on 'deftmp;return;endif
+
+#-- inserisco il campo su defvarname (e>1)
+*  say setvarying
+  setvarying
+*  deftmp='define 'defvarname'='defvarname' + const(maskout(tmp000,('eeevar'>'ifield'-0.1)&('eeevar'<'ifield'+0.1)),0,-u)'
+  deftmp='define 'defvarname'='defvarname' + const(maskout(tmp000,('eeevar'='ifield')),0,-u)'
+*  say deftmp
+  deftmp
+  if(rc);say funcname' ERROR7 on 'deftmp;return;endif
+  say 'added field <'field'> on variable<'defvarname'> for e <'ifield'>'
+  'undefine tmp000'
+ endwhile
+
+#-- ripristino gli undef
+ if(undef2!='none')
+  deftmp='define 'defvarname'=maskout('defvarname',('defvarname'!='undef2'))'
+*  say deftmp
+  deftmp
+  if(rc);say funcname' ERROR9 on 'deftmp;return;endif
+ endif
+
+#-- esco
+* say setfixed
+ setfixed
+ 'close 'unit
+ say 'variable <'defvarname'> spanning over <e> from 1 to 'nfields' filled in 'runTime()' sec'
+return
+
+#***************************************************************************
+#* FUNCTION LINLEN ritorna la lunghezza in word di una line
+#function linlen(line)
+# i=0;while(i<200);i=i+1
+#  word=subwrd(line,i,1)
+#  if(word="");j=i-1;break;endif
+# endwhile
+#return j

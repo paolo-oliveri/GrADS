@@ -3,7 +3,7 @@
 # 20220627 Paolo Oliveri
 #
 
-export GSFS=*.gs
+export GSFS=*
 
 %:
 	@$(MAKE) -f ../gex.mk $@

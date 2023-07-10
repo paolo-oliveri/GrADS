@@ -1,0 +1,119 @@
+#-----------------------------------------------------------------
+#-- libreria per il richiamo delle costanti fisiche e delle formule per le derivate
+function libPhysics()
+ if(_DEBUG)
+  say 'sourcing libPhysics: value <- getPhisycs(what)'
+  say '                     formula <- derivative(var,dim,method)'
+ endif
+return
+
+#-----------------------------------------------------
+#-- torna il valore di alcune grandezze standard, come R, g, rotazione terrestre, parametro di coriolis
+function getPhisycs(what)
+ if(_DEBUG);say 'libPhysics::getPhisycs('what')';endif
+ if(what='help')
+  say "uso: getPhisycs(what) dove what puo' valere:"
+  say "  omega:   torna la velocoita' angolare terrestre"
+  say "  radius:  torna il raggio medio terrestre"
+  say "  R:       torna la costante universale dei gas applicata all'aria secca"
+  say "  g:       torna la costante di gravita' terrestre"
+  say "  pi:      torna pi greco"
+  say "  f:       torna il parametro di coriolis 2*omega*sin(lat)"
+  say "  deg2rad: torna il rapporto di conversione da gradi a radianti"
+  say "  rad2deg: torna il rapporto di conversione da radianti a gradi"
+  say "  deg2m:   torna il rapporto di conversione da gradi di latitudine a metri sulla superficie terrestre"
+  say "  ms2kn:   torna il rapporto di conversione da metri al secondo e nodi"
+  say "  help:    questo help"
+  return
+ endif
+#-- pi greco
+ if(what='pi')
+  ret=math_acos(-1)
+ endif
+#-- costante di gravita' terrestre
+ if(what='g')
+  ret=9.80665
+ endif
+#-- raggio medio terrestre
+ if(what='radius')
+  ret=6371005.076123
+ endif
+#-- costante universale dei gas applicata all'aria secca
+ if(what='R')
+  ret=287.05
+ endif
+#-- conversione da metri al secondo a nodi
+ if(what='ms2kn')
+  ret=1.94384
+ endif
+#-- conversione da gradi a metri
+ if(what='deg2m')
+  deg2rad=getPhisycs('deg2rad')
+  radius=getPhisycs('radius')
+  deg2m=deg2rad*radius
+  ret=deg2m
+ endif
+#-- conversione da gradi a radianti
+ if(what='deg2rad')
+  pi=getPhisycs('pi')
+  ret=pi/180
+ endif
+#-- conversione da radianti a gradi 
+ if(what='rad2deg')
+  pi=getPhisycs('pi')
+  ret=180/pi
+ endif
+#-- rotazione terrestre omega = 2*pi/24h
+ if(what='omega')
+  pi=getPhisycs('pi')
+  omega=2*pi/(24*3600)
+  ret=omega
+ endif
+#-- rotazione terrestre omega = 2*pi/24h
+ if(what='f')
+  omega=getPhisycs('omega')
+  deg2rad=getPhisycs('deg2rad')
+  f='2*'omega'*sin(lat*'deg2rad')'
+  ret=f
+ endif
+return ret
+
+#-----------------------------------------------------
+#-- torna la stringa che definisce la derivata di var lungo la dimensione dim (x o y)
+#-- calcola le derivate centrate, ammette 3 metodi:
+#--   scalar (default) fa le derivate assumendo che var sia uno scalare e non una componente di un vettore
+#--   vector fa le derivate assumendo che var sia una componente di un vettore. Lungo X non cambia rispetto a scalar, lungo Y si
+#--   grads corrisponde a hdivg
+#--   hdivg fa le derivate usando la funzione hdivg grads, equivale al metodo vector
+#--   hcurl fa le derivate usando la funzione hcurl grads, equivale al metodo vector
+#--   divg+curl fa le derivate usando la combinazione delle funzioni hcurl e hdivg di grads, equivale al metodo vector
+function derivative(var,dim,method)
+ if(_DEBUG);say 'libPhysics::derivative('var','dim','method')';endif
+ if(method='' | method='method');method='scalar';endif
+ if(method='grads');method='hdivg';endif
+ if(method='scalar' | method='vector')
+  deg2rad=getPhisycs('deg2rad')
+  deg2m=getPhisycs('deg2m')
+ endif
+#-- direzione X
+ if(dim='x')
+  if(method='scalar' | method='vector')
+   ret='cdiff('var',x)/(cdiff(lon,x)*'deg2m'*cos(lat*'deg2rad'))'
+  endif
+  if(method='hdivg');ret='hdivg('var',const('var',0))';endif
+  if(method='hcurl');ret='hcurl(const('var',0),'var')';endif
+  if(method='divg+curl');ret='(hdivg('var','var')+hcurl('var','var'))/2';endif
+ endif
+#-- direzione Y
+ if(dim='y')
+  if(method='scalar')
+   ret='cdiff('var',y)/(cdiff(lat,y)*'deg2m')'
+  endif
+  if(method='vector')
+   ret='cdiff('var'*cos(lat*'deg2rad'),y)/(cdiff(lat,y)*cos(lat*'deg2rad')*'deg2m')'
+  endif
+  if(method='hdivg');ret='hdivg(const('var',0),'var')';endif
+  if(method='hcurl');ret='-hcurl('var',const('var',0))';endif
+  if(method='divg+curl');ret='(hdivg('var','var')-hcurl('var','var'))/2';endif
+ endif
+return ret

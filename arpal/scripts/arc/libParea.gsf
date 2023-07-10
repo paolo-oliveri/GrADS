@@ -1,0 +1,86 @@
+#-----------------------------------------------------------------
+#-- libreria per la gestione della parea e il disegno di markew, rec, ecc
+function libParea()
+ if(_DEBUG)
+  say 'sourcing libParea: pare <- getParea()'
+  say '                   logical <- insideParea(xp,yp)'
+  say '                   NULL <- drawRec(lon1,lon2,lat1,lat2,col)'
+  say '                   NULL <- clearPlot(xp1,xp2,yp1,yp2) fa un rec color 0 sulle coords date, se non le passo usa la parea'
+  say '                   NULL <- drawMark(xp,yp,mtyp,msiz,mcol)'
+ endif
+return
+
+#-----------------------------------------------------------------
+#-- torna la parea dell'ultimo plot
+function getParea()
+ 'q gxinfo'
+ linea=sublin(result,3)
+ x1p=subwrd(linea,4)
+ x2p=subwrd(linea,6)
+ linea=sublin(result,4)
+ y1p=subwrd(linea,4)
+ y2p=subwrd(linea,6)
+ if(_DEBUG);say x1p' 'y1p' 'x2p' 'y2p' <- libParea::getParea()';endif
+return x1p' 'y1p' 'x2p' 'y2p
+
+#-----------------------------------------------------------------
+#-- torna la parea dell'ultimo plot nel formato utile per set parea
+function getParea2()
+ 'q gxinfo'
+ linea=sublin(result,3)
+ x1p=subwrd(linea,4)
+ x2p=subwrd(linea,6)
+ linea=sublin(result,4)
+ y1p=subwrd(linea,4)
+ y2p=subwrd(linea,6)
+ if(_DEBUG);say x1p' 'x2p' 'y1p' 'y2p' <- libParea::getParea()';endif
+return x1p' 'x2p' 'y1p' 'y2p
+
+#-----------------------------------------------------------------
+#-- torna se le coord di pagina passate sono dentro (1) o fuori (0) la plot area
+function insideParea(xp,yp)
+ parea=getParea()
+ x1p=subwrd(parea,1)
+ y1p=subwrd(parea,2)
+ x2p=subwrd(parea,3)
+ y2p=subwrd(parea,4)
+ if(xp>=x1p & xp<=x2p & yp>=y1p & yp<=y2p)
+  ret=1
+ else
+  ret=0
+ endif
+ if(_DEBUG);say ret' <- libParea::insideParea('xp','yp')';endif
+return ret
+
+#-----------------------------------------------------------------
+#-- disegna un rettangolo, colore di default: blu
+function drawRec(lon1,lon2,lat1,lat2,col)
+ if(_DEBUG);say 'libParea::drawRec('lon1','lon2','lat1','lat2','col')';endif
+ if(col='col' | col='');col=4;endif
+ coords=Cw2xy(lon1,lat1);xp1=subwrd(coords,1);yp1=subwrd(coords,2)
+ coords=Cw2xy(lon2,lat2);xp2=subwrd(coords,1);yp2=subwrd(coords,2)
+ 'set line 'col
+ 'draw rec 'xp1' 'yp1' 'xp2' 'yp2
+return
+
+#-----------------------------------------------------------------
+#-- disegna un rettangolo del colore dello sfondo sulle coordinate di pagina passate
+#-- se non le passo utilizza la parea
+function clearPlot(xp1,xp2,yp1,yp2)
+ if(xp1='xp1' | xp2='xp2' | yp1='yp1' | yp2='yp2')
+  parea=getParea()
+  xp1=subwrd(parea,1);yp1=subwrd(parea,2);xp2=subwrd(parea,3);yp2=subwrd(parea,4)
+ endif
+ 'set line 0'
+ 'draw recf 'xp1' 'yp1' 'xp2' 'yp2
+return
+
+#-----------------------------------------------------------------
+#-- disegna un mark nelle coordinate di pagina date
+function drawMark(xp,yp,mtyp,msiz,mcol)
+ if(mtyp='mtyp' | mtyp='');mtyp=1;endif
+ if(msiz='msiz' | msiz='');msiz=0.2;endif
+ if(mcol='mcol' | mcol='');mcol=1;endif
+ 'set line 'mcol
+ 'draw mark 1 'xp' 'yp' 'msiz
+return

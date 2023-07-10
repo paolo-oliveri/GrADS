@@ -1,0 +1,755 @@
+#-----------------------------------------------------------------
+#-- libreria con utilita' generiche
+function libUtils()
+ if(_DEBUG)
+  say 'sourcing libUtils: min,max,cmin,cmax,cint <- minmax(var)'
+  say '                   NULL <- incr(var,increment) incrementa la dimensione dim di increment'
+  say '                   dfile <- openFile(fctl)'
+  say '                   NULL <- logStamp(str) se fout è undefined scrive su STDOUT, altrimenti su fout'
+  say '                   value <- getValue(var,xg,yg)'
+  say '                   shdinfo <- fillShades(Clevs,Ccols) shdinfo che ha lo stessa struttura di query shades'
+  say '                   NULL <- drawBar(shift,sizeBar,Tit,vert,Clevs,Ccols,sizeWidth,sizeFont,levSkip,shdShift,boxColor) disegna la cbar'
+  say '                   skipX,skipY <- findSkip(density)'
+  say '                   mpdset <- findMpdset()'
+  say '                   x1,x2,y1,y2,z1,z2,t1,t2,lon1,lon2,lat1,lat2,lev1,lev2,tim1,tim2 <- dimens(dim)'
+  say '                   Xsize,Ysize,Zsize,Tsize,Esize <- getDims(fnumber)'
+  say '                   sec.msec <- runTime(what)'
+  say '                   info <- qdims(what)'
+  say '                   slope,intercept,correlation <- lreg(vx,vy)'
+ endif
+return
+
+#-----------------------------------------------------------------
+* FUNCTION MINMAX ritorna minimo e massimo, reali e arrotondati, per il plot corrente
+function minmax(var)
+* say 'ensview::minmax('var')'
+ 'set gxout stat'
+ 'd 'var
+ i=0;while(i<100);i=i+1
+  line=sublin(result,i)
+  check=subwrd(line,1)
+  if(check="Min,")
+   min=subwrd(line,4)
+   max=subwrd(line,5)
+   if(max="to");max=min;endif
+  endif
+  if(check="Cmin,")
+   cint=subwrd(line,7)
+   cmin=subwrd(line,5)-cint
+   cmax=subwrd(line,6)+cint
+   break
+  endif
+  if(check="DISPLAY");return ''_ERR' '_ERR;endif
+ endwhile
+ if(min='min');say 'libUtils::minmax('var') ERROR';'quit';endif
+ if(_DEBUG);say min' 'max' 'cmin' 'cmax' 'cint' <- libUtils::minmax('var')';endif
+return min' 'max' 'cmin' 'cmax' 'cint
+
+#-----------------------------------------------------------------
+#-- incrementa la dimensione dim di increment
+#-- l'incremento viene fatto sse non si esce dai limiti del ctl
+function incr(dim,increment)
+ if(_DEBUG);say 'libUtils::incr('dim','increment')';endif
+ if(_NLON='_NLON' | _NLAT='_NLAT' | _NLEV='_NLEV' | _NTIME='_NTIME' | _NENS='_NENS')
+  global()
+ endif
+ if(dim='');dim='t';endif
+ if(increment='');increment='+1';endif
+ if(dim='x');iline=2;lim0=1;lim2=_NLON;endif
+ if(dim='y');iline=3;lim0=1;lim2=_NLAT;endif
+ if(dim='z');iline=4;lim0=1;lim2=_NLEV;endif
+ if(dim='t');iline=5;lim0=1;lim2=_NTIME;endif
+ if(dim='e');iline=6;lim0=1;lim2=_NENS;endif
+ 'q dims'
+ line=sublin(result,iline)
+ check=subwrd(line,3)
+ if(check!='fixed')
+  say ''line' 'dim' has to be fixed, not 'check
+  return
+ endif
+ num0=subwrd(line,9)
+ num1=num0+increment
+ if(num1>=lim0 & num1<=lim2)
+  'set 'dim' 'num1
+  say 'system variable 'dim' changed: 'num0' -> 'num1
+ endif
+* 'q dims';say ''result
+return
+
+#-----------------------------------------------------------------
+#-- torna il fattore moltiplicativo per la precipitazione, mslp, q
+function getFactor(var)
+ fact=''
+ var2=substr(var,1,2)
+ if(var2='tp')
+  if(_UNITS.var='[kg/m**2]' | _UNITS.var='[kg/(m**2)]' | _UNITS.var='[mm]' | _UNITS.var='[kg/m^2]');else;fact='*1000';endif
+ endif
+ if(var='q')
+  if(_UNITS.var='[g kg**-1]' | _UNITS.var='[g/kg]');else;fact='*1000';endif
+ endif
+ if(var='mslp')
+  if(_UNITS.var='[Pa]');fact='/100';endif
+ endif
+ if(_DEBUG);say fact' <- libUtils::getFactor('var') (_UNITS.'var'='_UNITS.var')';endif
+return fact
+
+#-----------------------------------------------------------------
+function openFile(fctl)
+ 'open 'fctl
+ if(rc)
+  dfile=0
+  say 'libUtils::openFile ERROR: cannot open file <'fctl'>'
+ else
+  line=sublin(result,2)
+  dfile=subwrd(line,8)
+ endif
+ if(_DEBUG);say dfile' <- libUtils::openFile('fctl')';endif
+return dfile
+
+#-----------------------------------------------------------------
+#-- se fout e' undefined scrive su STDOUT, altrimenti su fout
+function logStamp(string,fout)
+* if(_DEBUG);say 'libUtils::logStamp('string')';endif
+ command="date +%H:%M:%S.%N"
+* 'shell "'command'"'
+* now=subwrd(result,1)
+ now=subwrd(sys(command),1)
+ if(fout='' | fout='fout')
+  say string' at 'now
+ else
+  ret=write(fout,string' at 'now,'append')
+ endif
+return
+
+#-----------------------------------------------------------------
+#-- ritorna il valore di una variabile defined su un punto di griglia
+function getValue(var,xg,yg)
+ 'q defval 'var' 'xg' 'yg
+ value=subwrd(result,3)
+ if(_DEBUG);say value' <- libUtils::getValue('var','xg','yg')';endif
+return value
+
+#-----------------------------------------------------------------------
+#-- torna una shdinfo che ha lo stessa struttura di 'query shades' riempita coi livelli in input
+function fillShades(Clevs,Ccols)
+* say 'CALLING fillShades 'Clevs
+#Number of levels = 21
+#0 <= 0.101
+#21 0.101 0.501
+#22 0.501 1.001
+#23 1.001 1.501
+#24 1.501 2.001
+#25 2.001 2.501
+#26 2.501 3.001
+#27 3.001 3.501
+#29 3.501 4.001
+#30 4.001 4.501
+#31 4.501 5.001
+#32 5.001 5.501
+#34 5.501 6.001
+#35 6.001 6.501
+#36 6.501 7.001
+#37 7.001 8.001
+#38 8.001 9.001
+#39 9.001 10.001
+#40 10.001 11.001
+#41 11.001 12.001
+#42 12.001 >
+#-- metto in result un CR
+ 'addnewline'
+ CR=result
+ nlevs=linlen(Ccols)
+ shdinfo='Number of levels = 'nlevs%CR
+ shdinfo=shdinfo%subwrd(Ccols,1)' <= 'subwrd(Clevs,1)%CR
+ i=1;while(i<nlevs-1);i=i+1
+  shdinfo=shdinfo%subwrd(Ccols,i)' 'subwrd(Clevs,i-1)' 'subwrd(Clevs,i)%CR
+ endwhile
+ shdinfo=shdinfo%subwrd(Ccols,nlevs)' 'subwrd(Clevs,i)' >'
+* say shdinfo
+return shdinfo
+
+#-----------------------------------------------------------------------
+#-- disegna la cbar
+#-- shift:	shift aggiuntivo verso l'alto per le bars orizzontali, verso dx per quello verticali
+#-- sizeBar:	dimensione di scala della bar, default 1.05
+#-- Tit:	mini legenda da mettere sopra la bar (o a dx per quelle orizzontali)
+#-- vert:	se 0 orizzontale, se 1 verticale, se vert vale '' decide cbar se farla verticale o meno
+#-- Clevs,Ccols	livelli e colori da adottare: se undefined li ricava da 'query shades'
+#-- sizeWidth	spessore, default 0.25
+#-- sizeFont	dimensione font, default 0.7
+#-- levSkip	quanti livelli skippare, il valore assoluto stabilisce lo skip, il segno se tutti a dx o alterni. Con 0 li skippa tutti
+#-- shdShift	se vale 1 le label dei livelli sono messi in corrispondenza del campio colore (#ccols=#clevs+1), se 0 del colore ((#ccols=#clevs)
+#-- boxColor	il colore dei box di contenimento dei sigoli colori, def.: 1. Se -1 non lo disegna
+function drawBar(shift,sizeBar,Tit,vert,Clevs,Ccols,sizeWidth,sizeFont,levSkip,shdShift,boxColor)
+ if(shift='' | shift='shift');shift=0;endif
+ if(vert='' | vert='vert');vert=0;endif
+ if(levSkip='' | levSkip='levSkip');levSkip=1;endif
+ if(sizeBar='' | sizeBar='sizeBar');sizeBar=1.05;endif
+ if(sizeWidth='' | sizeWidth='sizeWidth');sizeWidth=0.25;endif
+ if(sizeFont='' | sizeFont='sizeFont');sizeFont=0.7;endif
+ if(shdShift='' | shdShift='shdShift');shdShift=1;endif
+ if(boxColor='' | boxColor='boxColor');boxColor=1;endif
+ if(_DEBUG);say 'drawBar('shift','sizeBar','Tit','vert','Clevs','Ccols','sizeWidth','sizeFont','levSkip','shdShift','boxColor')';endif
+ dummy=getParea()
+ xp1=subwrd(dummy,1);yp1=subwrd(dummy,2);xp2=subwrd(dummy,3);yp2=subwrd(dummy,4)
+ xmid=''
+ ymid=''
+ if(vert=0)
+  xmid=(xp1+xp2)/2
+  ymid=yp1-0.2-shift
+ endif
+ if(vert=1)
+  xmid=xp2+0.2+shift
+  ymid=(yp1+yp2)/2
+ endif
+ triangle=0
+ skip=0
+
+*  Check shading information
+ if(Clevs='Clevs' | Clevs='' | Ccols='Ccols' | Ccols='')
+  'query shades'
+  shdinfo = result
+ else
+  shdinfo = fillShades(Clevs,Ccols)
+*  say 'fillShades('Clevs','Ccols')'
+ endif
+ if (subwrd(shdinfo,1)='None');return;endif
+
+*  Get plot size info
+ 'query gxinfo'
+ rec2 = sublin(result,2)
+ rec3 = sublin(result,3)
+ rec4 = sublin(result,4)
+ xsiz = subwrd(rec2,4)
+ ysiz = subwrd(rec2,6)
+ ylo = subwrd(rec4,4)
+ xhi = subwrd(rec3,6)
+ xd = xsiz - xhi
+
+ ylolim=0.6*sizeBar
+ xdlim1=1.0*sizeBar
+ xdlim2=1.5*sizeBar*sizeWidth
+ barsb=0.8*sizeBar
+ yoffset=0.2*sizeBar
+ stroff=0.05*sizeBar
+ strxsiz=0.12*sizeBar*sizeFont
+ strysiz=0.13*sizeBar*sizeFont
+
+*  Decide if horizontal or vertical color bar and set up constants.
+ if (ylo<ylolim & xd<xdlim1);return;endif
+ cnum = subwrd(shdinfo,5)
+
+* logic for setting the bar orientation with user overides
+ if (ylo<ylolim | xd>xdlim1)
+  vchk = 1
+  if(vert = 0) ; vchk = 0 ; endif
+ else
+  vchk = 0
+  if(vert = 1) ; vchk = 1 ; endif
+ endif
+
+* vertical bar
+ if (vchk = 1 )
+  if(xmid = '') ; xmid = xhi+xd/2 ; endif
+  xwid = 0.2*sizeBar*sizeWidth
+  ywid = 0.5*sizeBar
+  xl = xmid-xwid/2
+  xr = xl + xwid
+  if (ywid*cnum > ysiz*barsb) 
+   ywid = ysiz*barsb/cnum
+  endif
+  if(ymid = '') ; ymid = ysiz/2 ; endif
+  yb = ymid - ywid*cnum/2
+  'set string 1 l 5'
+  vert = 1
+ else
+* horizontal bar
+  ywid = 0.2*sizeBar*sizeWidth
+  xwid = 0.8*sizeBar
+  if(ymid = '') ; ymid = ylo/2-ywid/2 ; endif
+  yt = ymid + ywid
+  yb = ymid
+  if(xmid = '') ; xmid = xsiz/2 ; endif
+  if (xwid*cnum > xsiz*barsb)
+   xwid = xsiz*barsb/cnum
+  endif
+  xl = xmid - xwid*cnum/2
+  'set string 1 tc 5'
+  vert = 0
+ endif
+
+*  say 'xmid:'xmid' ymid:'ymid' ysiz:'ysiz' SizeWidth:'sizeWidth' Cnum:'cnum' Xwid:'xwid' Ywid:'ywid' Ytop:'yt' Ybot:'yb
+
+*  Plot colorbar
+ 'set strsiz 'strxsiz' 'strysiz
+ num = 0
+ while (num<cnum) 
+  rec = sublin(shdinfo,num+2)
+  col = subwrd(rec,1)
+  hi = subwrd(rec,3)
+  if (vert) 
+   yt = yb + ywid
+  else 
+   xr = xl + xwid
+  endif
+
+*  CON triangolo
+  if(triangle)
+   if(num!=0 & num!= cnum-1)
+    if(boxColor!=-1)
+     'set line 'boxColor' 1 10'
+     'draw rec 'xl' 'yb' 'xr' 'yt
+    endif
+    'set line 'col
+    'draw recf 'xl' 'yb' 'xr' 'yt
+   endif
+   if (num<cnum-1)
+    if (vert) 
+     xp=xr+stroff
+     draw=1
+     if(skip!=0)
+      real=num/skip
+      intg=math_int(real)
+      if(intg=real);draw=1;else;draw=0;endif
+     endif
+     if(draw)
+      'draw string 'xp' 'yt' 'hi
+     endif
+    else
+     yp=yb-stroff
+     'draw string 'xr' 'yp' 'hi
+    endif
+   endif
+   if(num = 0 )
+    if(vert = 1)
+     xm=(xl+xr)*0.5
+     'set line 1 1 10'
+     'draw line 'xl' 'yt' 'xm' 'yb
+     'draw line 'xm' 'yb' 'xr' 'yt
+     'draw line 'xr' 'yt' 'xl' 'yt
+     'set line 'col
+     'draw polyf 'xl' 'yt' 'xm' 'yb' 'xr' 'yt' 'xl' 'yt
+    else
+     ym=(yb+yt)*0.5
+     'set line 1 1 10'
+     'draw line 'xl' 'ym' 'xr' 'yb
+     'draw line 'xr' 'yb' 'xr' 'yt
+     'draw line 'xr' 'yt' 'xl' 'ym
+     'set line 'col
+     'draw polyf 'xl' 'ym' 'xr' 'yb' 'xr' 'yt' 'xl' 'ym
+    endif
+   endif
+   if(num = cnum-1 )
+    if( vert = 1)
+     'set line 1 1 10'
+     'draw line 'xl' 'yb' 'xm' 'yt
+     'draw line 'xm' 'yt' 'xr' 'yb
+     'draw line 'xr' 'yb' 'xl' 'yb
+     'set line 'col
+     'draw polyf 'xl' 'yb' 'xm' 'yt' 'xr' 'yb' 'xl' 'yb
+    else
+     'set line 1 1 10'
+     'draw line 'xr' 'ym' 'xl' 'yb
+     'draw line 'xl' 'yb' 'xl' 'yt
+     'draw line 'xl' 'yt' 'xr' 'ym
+     'set line 'col
+     'draw polyf 'xr' 'ym' 'xl' 'yb' 'xl' 'yt' 'xr' 'ym
+    endif
+   endif
+*  SENZA triangolo
+  else
+   if (shdShift | (num<cnum-1))
+    if(boxColor!=-1)
+     'set line 'boxColor' 1 10'
+     'draw rec 'xl' 'yb' 'xr' 'yt
+    endif
+    'set line 'col
+    'draw recf 'xl' 'yb' 'xr' 'yt
+   endif
+   if (num<cnum-1)
+    if(skip!=0)
+     real=num/skip
+     intg=math_int(real)
+     if(intg=real);draw=1;else;draw=0;endif
+    endif
+    if (vert) 
+     if(shdShift);yp=yt;else;yp=(yt+yb)/2;endif
+     xp=xr+stroff
+     if(draw)
+*say levSkip' & !math_mod('num','levSkip'))'
+      if(levSkip & !math_mod(num,levSkip))
+       if(drawn='drawn');drawn=1;else;drawn=drawn+1;endif
+       if(levSkip<0 & math_mod(drawn,2))
+        'set string 1 r 5'
+        xp_alt=xl-stroff
+       else
+        'set string 1 l 5'
+        xp_alt=xp
+       endif
+       'draw string 'xp_alt' 'yp' 'hi
+      endif
+     endif
+    else
+     if(shdShift);xp=xr;else;xp=(xr+xl)/2;endif
+     yp=yb-stroff
+     if(draw)
+      if(levSkip & !math_mod(num,levSkip))
+       if(drawn='drawn');drawn=1;else;drawn=drawn+1;endif
+       if(levSkip<0 & math_mod(drawn,2))
+        'set string 1 bc 5'
+        yp_alt=yt+stroff
+       else
+        'set string 1 tc 5'
+        yp_alt=yp
+       endif
+       'draw string 'xp' 'yp_alt' 'hi
+      endif
+     endif
+    endif
+   endif
+  endif
+
+  num = num + 1
+  if (vert); yb = yt; else; xl = xr; endif;
+ endwhile
+
+* title
+ if(Tit!='' & Tit!='Tit')
+  if (vchk = 1 )
+   Ytit=ymid+ywid*cnum/2;# coordinata Y elemento piu' alto della barra
+   Xtit=xmid+0.1
+   Ytit=Ytit+0.1
+   if(!shdShift);Ytit=Ytit+ywid;endif
+   'set string 1 c 1 0'
+  else
+   
+   Ytit=ymid+ywid/2
+   Xtit=Xtit+0.05
+   if(!shdShift);Xtit=Xtit-xwid;endif
+   'set string 1 l 10 0'
+  endif
+  'set strsiz 0.08'
+  'set strsiz 0.14'
+*  'draw string 'Xtit' 'Ytit' `1'Tit'`0'
+  'draw string 'Xtit' 'Ytit' 'Tit
+ endif
+return
+
+#-----------------------------------------------------------------
+#-- trova lo skip ideale, torna "skipX,skipY"
+function findSkip(density)
+ if(_DEBUG);say 'findSkip('density')';endif
+ if(density='' | density='density');density=10;endif
+ dummy=getParea()
+ xp1=subwrd(dummy,1);yp1=subwrd(dummy,2);xp2=subwrd(dummy,3);yp2=subwrd(dummy,4)
+ dummy=dimens()
+ xg1=subwrd(dummy,1);xg2=subwrd(dummy,2);yg1=subwrd(dummy,3);yg2=subwrd(dummy,4)
+ skipX=math_nint((xg2-xg1)/(xp2-xp1)/density)
+ skipY=math_nint((yg2-yg1)/(yp2-yp1)/density)
+ if(_DEBUG)
+  say 'findSkip('density') in X: ('xg2'-'xg1')/('xp2'-'xp1')='%((xg2-xg1)/(xp2-xp1))%' richiesta:'density' -> skipX:'skipX
+  say 'findSkip('density') in Y: ('yg2'-'yg1')/('yp2'-'yp1')='%((yg2-yg1)/(yp2-yp1))%' richiesta:'density' -> skipY:'skipY
+ endif
+ ret=','skipX','skipY
+return ret
+
+#-----------------------------------------------------------------
+#-- trova lo mpdset ideale, torna mpdset
+function findMpdset()
+ if(_DEBUG);say 'findMpdset()';endif
+ dummy=dimens()
+ xw1=subwrd(dummy,9);xw2=subwrd(dummy,10);yw1=subwrd(dummy,11);yw2=subwrd(dummy,12)
+ xwid=xw2-xw1
+ ywid=yw2-yw1
+ mpdset='lowres'
+ area=xwid*ywid
+ if(area<5000);mpdset='mres';endif
+ if(area<2000);mpdset='hires';endif
+ if(area<1000);mpdset='gmtlowmap';endif
+ if(area<600);mpdset='gmtmedimap';endif
+ if(area<200);mpdset='gmthighmap';endif
+ say findMpdset' - xwid:'xwid' ywid:'ywid' area:'area' mpdset:'mpdset
+ res=mpdset
+return res
+
+***************************************************************************
+* ritorna le dims: x1,x2,y1,y2,z1,z2,t1,t2,lon1,lon2,lat1,lat2,lev1,lev2,tim1,tim2
+function dimens(dim)
+ if(dim='dim' | dim='');dim='all';endif
+ 'query dims'
+ linex=sublin(result,2)
+ liney=sublin(result,3)
+ linez=sublin(result,4)
+ linet=sublin(result,5)
+ flagx=subwrd(linex,3)
+ if(flagx="varying")
+  x1=subwrd(linex,11)
+  x2=subwrd(linex,13)
+  lon1=subwrd(linex,6)
+  lon2=subwrd(linex,8)
+ else
+  x1=subwrd(linex,9)
+  x2=subwrd(linex,9)
+  lon1=subwrd(linex,6)
+  lon2=subwrd(linex,6)
+ endif
+ flagy=subwrd(liney,3)
+ if(flagy="varying")
+  y1=subwrd(liney,11)
+  y2=subwrd(liney,13)
+  lat1=subwrd(liney,6)
+  lat2=subwrd(liney,8)
+ else
+  y1=subwrd(liney,9)
+  y2=subwrd(liney,9)
+  lat1=subwrd(liney,6)
+  lat2=subwrd(liney,6)
+ endif
+ flagz=subwrd(linez,3)
+ if(flagz="varying")
+  z1=subwrd(linez,11)
+  z2=subwrd(linez,13)
+  lev1=subwrd(linez,6)
+  lev2=subwrd(linez,8)
+ else
+  z1=subwrd(linez,9)
+  z2=subwrd(linez,9)
+  lev1=subwrd(linez,6)
+  lev2=subwrd(linez,6)
+ endif
+ flagt=subwrd(linet,3)
+ if(flagt="varying")
+  t1=subwrd(linet,11)
+  t2=subwrd(linet,13)
+  tim1=subwrd(linet,6)
+  ltim=subwrd(linet,8)
+ else
+  t1=subwrd(linet,9)
+  t2=subwrd(linet,9)
+  tim1=subwrd(linet,6)
+  tim2=subwrd(linet,6)
+ endif
+#-- case construct
+ while(doOnce);doOnce=0
+  if(dim='all');res=x1' 'x2' 'y1' 'y2' 'z1' 'z2' 't1' 't2' 'lon1' 'lon2' 'lat1' 'lat2' 'lev1' 'lev2' 'tim1' 'tim2;continue;endif
+  if(dim='x');res=x1' 'x2;continue;endif
+  if(dim='x1');res=x1;continue;endif
+  if(dim='x2');res=x2;continue;endif
+  if(dim='y');res=y1' 'y2;continue;endif
+  if(dim='y1');res=y1;continue;endif
+  if(dim='y2');res=y2;continue;endif
+  if(dim='z');res=z1' 'z2;continue;endif
+  if(dim='z1');res=z1;continue;endif
+  if(dim='z2');res=z2;continue;endif
+  if(dim='t');res=t1' 't2;continue;endif
+  if(dim='t1');res=t1;continue;endif
+  if(dim='t2');res=t2;continue;endif
+  if(dim='lon');res=lon1' 'lon2;continue;endif
+  if(dim='lon1');res=lon1;continue;endif
+  if(dim='lon2');res=lon2;continue;endif
+  if(dim='lat');res=lat1' 'lat2;continue;endif
+  if(dim='lat1');res=lat1;continue;endif
+  if(dim='lat2');res=lat2;continue;endif
+  if(dim='lev');res=lev1' 'lev2;continue;endif
+  if(dim='lev1');res=lev1;continue;endif
+  if(dim='lev2');res=lev2;continue;endif
+  if(dim='tim');res=tim1' 'tim2;continue;endif
+  if(dim='tim1');res=tim1;continue;endif
+  if(dim='tim2');res=tim2;continue;endif
+ endwhile
+return res
+
+#--------------------------------------------------------------------------
+#-- torna le dimensioni Xsize Ysize Zsize Tsize Esize del file aperto con fnumber (se non viene passato prende il file corrente)
+function getDims(fnumber)
+ if(fnumber='' | fnumber='fnumber');fnumber='';endif
+ ret=''
+ 'q file 'fnumber
+ i=0;while(i<10);i=i+1
+  line=sublin(result,i)
+  word=subwrd(line,1)
+  if(word='Xsize')
+   ret=subwrd(line,3)' 'subwrd(line,6)' 'subwrd(line,9)' 'subwrd(line,12)' 'subwrd(line,15)
+   break
+  endif
+ endwhile
+return ret
+
+#--------------------------------------------------------------------------
+#-- serve per calcolare il tempo di esecuzione di una certa porzione di script
+#-- la prima volta che la chiamo, o se passo 'init' come argomento, inizializza _TIMESEC che esprime sec.msec dalle epoche
+#-- le volte successive aggiorna _TIMESEC e torna la differenza rispetto al valore precedente (in sec.msec)
+function runTime(what)
+ cmd='date +"%s 0.%N"'
+ if(what='init' | _TIMESEC='_TIMESEC')
+*  "shell '"cmd"'"
+  dummy=sys(cmd)
+  sec=subwrd(dummy,1)
+  msec=subwrd(dummy,2)
+  msec=math_format('%.3f',msec)
+  _TIMESEC=sec+msec
+  res=''
+ else
+*  "shell '"cmd"'"
+  sec=subwrd(dummy,1)
+  msec=subwrd(dummy,2)
+  msec=math_format('%.3f',msec)
+  now=sec+msec
+  res=math_format('%.3f',now-_TIMESEC)
+  _TIMESEC=now
+ endif
+return res
+
+#--------------------------------------------------------------------------
+# torna la info richiesta:
+#   fnum  numero del default file
+#   varying|fixed number of varying/fixed dimensions
+#   xtype (varying/fixed)|lonmin|lonmax|xmin|xmax
+#   ytype (varying/fixed)|latmin|latmax|ymin|ymax
+#   ztype (varying/fixed)|levmin|levmax|zmin|zmax
+#   ttype (varying/fixed)|timemin|timemax|tmin|tmax
+#   etype (varying/fixed)|ensmin|ensmax|emin|emax
+function qdims( id )
+  ret = ''
+  'q dims'
+  if( id = 'fnum' )
+    line = sublin( result, 1 )
+    ret = subwrd( line, 5 )
+    return ret
+  endif
+  if( id = 'varying' | id = 'fixed' )
+    ret = 0
+    i = 2
+    while( i <= 6 )
+      line = sublin( result, i )
+      stat = subwrd( line, 3 )
+      if( stat = id ) ; ret = ret + 1 ; endif
+      i = i + 1
+    endwhile
+    return ret
+  endif
+  if( id = 'xtype' | id = 'lonmin' | id = 'lonmax' | id = 'xmin' | id = 'xmax'  )
+    line = sublin( result, 2 )
+  endif
+  if( id = 'ytype' | id = 'latmin' | id = 'latmax' | id = 'ymin' | id = 'ymax' )
+    line = sublin( result, 3 )
+  endif
+  if( id = 'ztype' | id = 'levmin' | id = 'levmax' | id = 'zmin' | id = 'zmax' )
+    line = sublin( result, 4 )
+  endif
+  if( id = 'ttype' | id = 'timemin' | id = 'timemax' | id = 'tmin' | id = 'tmax' )
+    line = sublin( result, 5 )
+  endif
+  if( id = 'etype' | id = 'ensmin' | id = 'ensmax' | id = 'emin' | id = 'emax' )
+    line = sublin( result, 6 )
+  endif
+  type = subwrd( line, 3 )
+  if( id = 'xtype' | id = 'ytype' | id = 'ztype' | id = 'ttype' | id = 'etype' )
+    ret = type
+  endif
+  if( id = 'lonmin' | id = 'latmin' | id = 'levmin' | id = 'timemin' | id = 'ensmin' )
+    ret = subwrd( line, 6 )
+    return ret
+  endif
+  if( id = 'lonmax' | id = 'latmax' | id = 'levmax' | id = 'timemax' | id = 'ensmax' )
+    if( type = 'fixed' ) ; ret = subwrd( line, 6 )
+    else ; ret = subwrd( line, 8 ) ; endif
+    return ret
+  endif
+  if( id = 'xmin' | id = 'ymin' | id = 'zmin' | id = 'tmin' | id = 'emin' )
+    if( type = 'fixed' ) ; ret = subwrd( line, 9 )
+    else ; ret = subwrd( line, 11 ) ; endif
+    return ret
+  endif
+  if( id = 'xmax' | id = 'ymax' | id = 'zmax' | id = 'tmax' | id = 'emax' )
+    if( type = 'fixed' ) ; ret = subwrd( line, 9 )
+    else ; ret = subwrd( line, 13 ) ; endif
+    return ret
+  endif
+return ret
+
+#--------------------------------------------------------------------------
+# crea la retta di regressione tra vx e vy
+# torna slope, intercept, correlation
+# definisce le variabili temporanee vx,vy,tmp
+function lreg(vx,vy)
+ rc = gsfallow("on")
+  xmin = qdims( 'xmin' ) ; xmax = qdims( 'xmax' )
+  ymin = qdims( 'ymin' ) ; ymax = qdims( 'ymax' )
+  zmin = qdims( 'zmin' ) ; zmax = qdims( 'zmax' )
+  tmin = qdims( 'tmin' ) ; tmax = qdims( 'tmax' )
+  emin = qdims( 'emin' ) ; emax = qdims( 'emax' )
+  'define vx='vx
+  'define vy='vy
+  str_head = ''
+  str_tail = ''
+  if( xmin != xmax )
+    str_head = 'ave(' % str_head
+    str_tail = str_tail % ',x='xmin',x='xmax')'
+  endif
+  if( ymin != ymax )
+    str_head = 'ave(' % str_head
+    str_tail = str_tail % ',y='ymin',y='ymax')'
+  endif
+  if( zmin != zmax )
+    str_head = 'ave(' % str_head
+    str_tail = str_tail % ',z='zmin',z='zmax')'
+  endif
+  if( tmin != tmax )
+    str_head = 'ave(' % str_head
+    str_tail = str_tail % ',t='tmin',t='tmax')'
+  endif
+  if( emin != emax )
+    str_head = 'ave(' % str_head
+    str_tail = str_tail % ',e='emin',e='emax')'
+  endif
+  'set x 1'
+  'set y 1'
+  'set z 1'
+  'set t 1'
+  'set e 1'
+  say 'vx = 'vx'  vy = 'vy
+* avx, avy: ave(vx), ave(vy)
+  'tmp = ' % str_head % 'vx' % str_tail
+  'd tmp'
+  avx = subwrd( result, 4 )
+  say 'avx = ' % str_head % 'vx' % str_tail % ' = ' % avx
+  'tmp = ' % str_head % 'vy' % str_tail
+  'd tmp'
+  avy = subwrd( result, 4 )
+  say 'avy = ' % str_head % 'vy' % str_tail % ' = ' % avy
+* avxy: ave(vx*vy)
+  'tmp = ' % str_head % 'vx*vy' % str_tail
+  'd tmp'
+  avxy = subwrd( result, 4 )
+  say 'avxy = ' % str_head % 'vx*vy' % str_tail % ' = ' % avxy
+* avxx: ave(vx*vx)
+  'tmp = ' % str_head % 'vx*vx' % str_tail
+  'd tmp'
+  avxx = subwrd( result, 4 )
+  say 'avxx = ' % str_head % 'vx*vx' % str_tail % ' = ' % avxx
+* sgx, sgy: sigma(vx), sigma(vy)
+  'tmp = sqrt(' % str_head % '(vx-'avx')*(vx-'avx')' % str_tail % ')'
+  'd tmp'
+  sgx = subwrd( result, 4 )
+  say 'sgx = sqrt(' % str_head % '(vx-avx)*(vx-avx)' % str_tail % ' = ' % sgx
+  'tmp = sqrt(' % str_head % '(vy-'avy')*(vy-'avy')' % str_tail % ')'
+  'd tmp'
+  sgy = subwrd( result, 4 )
+  say 'sgy = sqrt(' % str_head % '(vy-avy)*(vy-avy)' % str_tail % ' = ' % sgy
+* linear regression coefficient
+  slope = ( avxy - avx * avy ) / ( avxx - avx * avx )
+  icept = avy - slope * avx
+  say 'y = ' % slope % ' x + ' % icept
+* correlation coefficient
+  'tmp = ' % str_head % '(vx-'avx')*(vy-'avy')' % str_tail % ' / ('sgx'*'sgy')'
+  'd tmp'
+  cor = subwrd( result, 4 )
+  say 'correlation: ' % cor
+  ret = slope % ' ' % icept % ' ' % cor
+  'set x 'xmin' 'xmax
+  'set y 'ymin' 'ymax
+  'set z 'zmin' 'zmax
+  'set t 'tmin' 'tmax
+  'set e 'emin' 'emax
+return ret

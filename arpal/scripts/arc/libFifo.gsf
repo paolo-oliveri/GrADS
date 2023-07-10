@@ -1,0 +1,45 @@
+#-----------------------------------------------------------------
+#-- libreria per la gestione delle named pipe
+function libFifo()
+ if(_DEBUG)
+  say 'sourcing libFifo: NULL <- mkFifo(fifo)'
+  say '                  NULL <- wrtFifo(fifo,string)'
+  say '                  string <- readFifo(fifo) torna quello che ha letto dalla named pipe'
+ endif
+return
+
+#---------------------------------------
+function mkFifo(fifo)
+ if(_DEBUG);say 'libFifo::mkFifo('fifo')';endif
+ '!test -e 'fifo' && rm -vf 'fifo
+ '!mkfifo 'fifo' && echo FIFO 'fifo' created'
+return
+
+#---------------------------------------
+function wrtFifo(fifo,string)
+ ret=write(fifo,string)
+ ret=close(fifo)
+ if(_DEBUG);logStamp('write('fifo','string') DONE');endif
+return
+
+#---------------------------------------
+function readFifo(fifo)
+ myFunc='readFifo'
+ content=read(fifo)
+ ret=sublin(content,1)
+ string=sublin(content,2)
+#-- test read: file exists or EOF
+ if(ret!=0 & ret!=2)
+  say myFunc' ERROR: reading from 'fifo' FAILED - err = 'ret
+  return 'quit'
+ endif
+#-- read: EOF -> rewind
+ if(ret=2)
+  ret=close(fifo)
+  say myFunc' rewind('fifo') DONE'
+  return 'rewind'
+#-- read: not EOF: give string
+ else
+  if(_DEBUG);logStamp(string' <- read('fifo') DONE');endif
+ endif
+return string

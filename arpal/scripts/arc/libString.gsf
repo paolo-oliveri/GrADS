@@ -1,0 +1,271 @@
+#-----------------------------------------------------------------
+#-- libreria per la gestione delle stringhe
+function libString()
+ if(_DEBUG)
+  say 'sourcing libString: NULL <- global() definisce _NLON,_LON0,_LON1,...'
+  say '                    line <- wrdsep(line,ci,co)'
+  say '                    len <- wrdlen(word)'
+  say '                    len <- linlen(line)'
+  say '                    len <- retlen(mline)'
+  say '                    logical <- checkList(word,list)'
+  say '                    string <- changeCase(string,toLower)'
+  say '                    string <- printf(format,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9,arg10)'
+  say '                    colorTTY <- printColor(color)'
+  say '                    string <- strip(string,char)'
+ endif
+return
+
+#-----------------------------------------------------------------
+* FUNCTION GLOBAL
+function global()
+ if(_DEBUG);say 'libString::global()';endif
+*
+* funziona con q ctlinfo
+*
+* THE GLOABAL VARIABLES SETTED HERE ARE:
+*
+*    _NLON _LON0 _LON1 _DLON
+*    _NLAT _LAT0 _LAT1 _DLAT
+*    _NLEV _LEV.i (i=1,_NLEV)
+*    _NTIME _DTIME _NDAYS _NTDAY
+*    _NVAR _VAR.i _VARLEVS.i _VARTITLE.i (i=1,_NVAR)
+*    _ERR
+ 'q ctlinfo'
+ out=result
+ nlin=retlen(out)
+ ilin=0;while(ilin<nlin);ilin=ilin+1
+*say ''ilin':'nlin':'sublin(out,ilin)
+  string=sublin(out,ilin)
+  def_code=subwrd(string,1)
+#-- dset
+  if(def_code='dset');_DAT=subwrd(string,2);endif
+#-- title
+  if(def_code='title');_TITLE=subwrd(string,2);endif
+#-- undef
+  if(def_code='undef');_ERR=subwrd(string,2);endif
+#-- xdef
+  if(def_code='xdef')
+   code=subwrd(string,3)
+   if(code!='linear');say 'code not supported for 'def_code' ... exiting ';return;endif
+   _NLON=subwrd(string,2)
+   _LON0=subwrd(string,4)
+   _DLON=subwrd(string,5)
+   if(_NLON*_DLON-_LON0=360);diff=_NLON;else;diff=_NLON-1;endif
+   _LON1=_LON0+diff*_DLON
+  endif
+#-- ydef
+  if(def_code='ydef')
+   code=subwrd(string,3)
+   if(code!='linear');say 'code not supported for 'def_code' ... exiting ';return;endif
+   _NLAT=subwrd(string,2)
+   _LAT0=subwrd(string,4)
+   _DLAT=subwrd(string,5)
+   diff=_NLAT-1
+   _LAT1=_LAT0+diff*_DLAT
+  endif
+#-- tdef
+  if(def_code='tdef')
+   code=subwrd(string,3)
+   if(code!='linear');say 'code not supported for 'def_code' ... exiting ';return;endif
+   _NTIME=subwrd(string,2)
+   _TIME0=subwrd(string,4)
+   AAA=subwrd(string,5)
+   len=wrdlen(AAA)-2
+   len1=len+1
+   _DTIME=substr(AAA,1,len)
+   _TUNIT=substr(AAA,len1,2)
+   if(_TUNIT='mn');_DTIMEHR=_DTIME/60;endif
+   if(_TUNIT='hr');_DTIMEHR=_DTIME;endif
+   if(_TUNIT='dy');_DTIMEHR=_DTIME*24;endif
+   if(_TUNIT='mo');_DTIMEHR=_DTIME*24*30;endif
+   if(_TUNIT='yr');_DTIMEHR=_DTIME*24*365;endif
+   _NDAYS=((_NTIME-1)*_DTIMEHR)/24
+   _NTDAY=24/_DTIMEHR
+   if(_DEBUG>2);say 'libString::global()_DTIMEHR:'_DTIMEHR;endif
+  endif
+#-- zdef
+  if(def_code='zdef')
+   code=subwrd(string,3)
+   if(code='linear')
+    _NLEV=subwrd(string,2)
+    _LEV0=subwrd(string,4)
+    _DLEV=subwrd(string,5)
+    diff=_NLEV-1
+    _LEV1=_LEV0+diff*_DLEV
+    i=0;while(i<_NLEV);i=i+1
+     _LEV.i=_LEV0+(i-1)*_DLEV
+    endwhile
+   else
+    _NLEV=subwrd(string,2)
+    i=0;j=3;while(i<_NLEV);i=i+1;j=j+1
+     check=subwrd(string,j)
+     if(check="")
+      ilin=ilin+1;string=sublin(out,ilin);i=i-1;j=0
+     else
+      _LEV.i=subwrd(string,j)
+      if(_DEBUG>2);say 'libString::global() lev.'i':'_LEV.i;endif
+     endif
+    endwhile
+   endif
+  endif
+#-- edef
+  if(def_code='edef')
+   _NENS=subwrd(string,2)
+  endif
+#-- vars
+  if(def_code='vars')
+   _NVAR=subwrd(string,2)
+   i=0;while(i<_NVAR);i=i+1
+    ilin=ilin+1
+    string=sublin(out,ilin)
+    _VAR.i=subwrd(string,1)
+    _VARLEVS.i=subwrd(string,2)
+    _VARCOD.i=subwrd(string,3)
+    len=linlen(string)
+    j=4;_VARTITLE.i=subwrd(string,j);while(j<len);j=j+1
+     _VARTITLE.i=_VARTITLE.i%' '%subwrd(string,j)
+    endwhile
+#-- accetto le units sia in () che in [] ma la traduco comunque in []
+    nwrd=linlen(_VARTITLE.i)
+    word=subwrd(_VARTITLE.i,nwrd)
+    var=_VAR.i
+    if(substr(word,1,1)='(' & substr(word,wrdlen(word),1)=')')
+     len=strlen(word)-2
+     word = '[' % substr(word,2,len) % ']'
+     _UNITS.var=word
+    endif
+    if(substr(word,1,1)='[' & substr(word,wrdlen(word),1)=']');_UNITS.var=word;endif
+    if(_DEBUG>2);say 'libString::global() var.'i':'_VAR.i':'_VARLEVS.i':'_VARCOD.i':'_VARTITLE.i': _UNITS.'var'='_UNITS.var;endif
+   endwhile
+  endif
+ endwhile
+#--  legge il modello
+ 'q file'
+ linea=sublin(result,1)
+ i=10;while(1);i=i-1
+  if(subwrd(linea,i)!="");_MODEL=subwrd(linea,i);break;endif
+ endwhile
+return
+
+***************************************************************************
+* FUNCTION WRDSEP ritorna una line sostituendo la stringa ci con co
+function wrdsep(line,ci,co)
+ if(_DEBUG>2);say 'libString::wrdsep('line','ci','co')';endif
+ if(co='co');co=' ';endif
+  linenew=''
+ nl=wrdlen(ci)
+ i=0;while(i<wrdlen(line));i=i+1
+  letter=substr(line,i,nl)
+  if(letter=ci)
+   letternew=co;i=i+nl-1
+  else
+   letternew=substr(letter,1,1)
+  endif
+  linenew=linenew%letternew
+ endwhile
+return linenew
+
+***************************************************************************
+* FUNCTION WRDLEN accetta una word; ritorna la sua lunghezza in char
+function wrdlen(word)
+ i=0;while(1);i=i+1
+  letter=substr(word,i,1)
+  if(letter='');ret=i-1;break;endif
+ endwhile
+ if(_DEBUG>2);say ret' <- libString::wrdlen('word')';endif
+return ret
+
+***************************************************************************
+* FUNCTION LINLEN ritorna la lunghezza in word di una line
+function linlen(line)
+ i=0;while(1);i=i+1
+  word=subwrd(line,i,1)
+  if(word='');ret=i-1;break;endif
+ endwhile
+ if(_DEBUG>2);say ret' <- libString::linlen('line')';endif
+return ret
+
+***************************************************************************
+* FUNCTION RETLEN ritorna la lunghezza in line di una multiple-line
+function retlen(mline)
+ i=0;while(1);i=i+1
+  line=sublin(mline,i,1)
+  if(line='');ret=i-1;break;endif
+ endwhile
+ if(_DEBUG>2);say ret' <- libString::retlen('mline')';endif
+return ret
+
+***************************************************************************
+* FUNCTION CHECKLIST ritorna 0 o 1 a seconda che la word sia presente nella lista
+function checkList(word,list)
+ ret=0
+ i=0;while(1);i=i+1
+  elem=subwrd(list,i)
+  if(elem=word);ret=1;break;endif
+  if(elem='');break;endif
+ endwhile
+ if(_DEBUG>2);say ret' <- libString::checkList('word','list')';endif
+return ret
+
+#--------------------------------------------
+#-- converte la stringa string a uppercase, se toLower=1 traduce a lowercase
+function changeCase(string,toLower)
+ if(toLower=1)
+  sedarg='y/ABCDEFGHIJKLMNOPQRSTUVWXYZ/abcdefghijklmnopqrstuvwxyz/'
+ else
+  sedarg='y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/'
+ endif
+ cmd='echo 'string' | sed 'sedarg
+* say cmd
+ if(_DEBUG>2);say 'libString::changeCase string: <'string'>';endif
+* "shell '"cmd"'"
+* string=sublin(result,1)
+ string=sublin(sys(cmd),1)
+ if(_DEBUG>2);say 'libString::changeCase string: <'string'>';endif
+return string
+
+#--------------------------------------------
+#-- mette in result una stringa formattata, accett sino a 10 argomenti
+#-- esempio: printf('%-120s %s','come ti chiami?','davide')
+function printf(format,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9,arg10)
+ args=''
+ if(arg1 !='arg1' & arg1 !='');args='"'arg1'"';endif
+ if(arg2 !='arg2' & arg2 !='');args=args' "'arg2'"';endif
+ if(arg3 !='arg3' & arg3 !='');args=args' "'arg3'"';endif
+ if(arg4 !='arg4' & arg4 !='');args=args' "'arg4'"';endif
+ if(arg5 !='arg5' & arg5 !='');args=args' "'arg5'"';endif
+ if(arg6 !='arg6' & arg6 !='');args=args' "'arg6'"';endif
+ if(arg7 !='arg7' & arg7 !='');args=args' "'arg7'"';endif
+ if(arg8 !='arg8' & arg8 !='');args=args' "'arg8'"';endif
+ if(arg9 !='arg9' & arg9 !='');args=args' "'arg9'"';endif
+ if(arg10!='arg10'& arg10!='');args=args' "'arg10'"';endif
+ cmd='printf "'format'" 'args
+* say cmd
+ if(_DEBUG>2);say 'libString::printf <'cmd'>';endif
+* "shell '"cmd"'"
+return sys(cmd)
+
+#--------------------------------------------
+#-- torna il colore richiesto per la stampa su tty
+function printColor(color)
+ if(color='color' | color='');color='default';endif
+ if(color='default');ret="[0m";endif
+ if(color='blue');ret="[1;34m";endif
+ if(color='red');ret="[1;31m";endif
+ if(color='green');ret="[1;32m";endif
+ if(color='yellow');ret="[1;33m";endif
+ if(color='grey');ret="[1;90m";endif
+return ret
+
+
+#--------------------------------------------
+#-- fa lo stripping di una stringa, ossia rimuove il carattere voluto (default: blank) dalla stringa
+function strip(string,char)
+ if(char='' | char='char');char=' ';endif
+ out=''
+ lstring=strlen(string)
+ i=0;while(i<lstring);i=i+1
+  s=substr(string,i,1)
+  if(s!=char);out=out%s;endif
+ endwhile
+return out
