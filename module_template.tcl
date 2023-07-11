@@ -27,6 +27,7 @@ setenv          GAINC               GRADSPREFIX/include/
 setenv          GADDIR              GRADSPREFIX/lib/grads
 setenv          GADSET              GRADSPREFIX/datasets
 setenv          GASHP               GRADSPREFIX/lib/grads/shapefiles
-setenv          GASCRP              "$env(HOME)/grads/scripts GRADSPREFIX/lib/grads/scripts/"
+setenv          GASCRP              "$env(HOME)/grads/scripts GRADSPREFIX/lib/grads/scripts/ GRADSPREFIX/lib/grads/scripts/arc"
 setenv          GAUDPT              GRADSPREFIX/lib/grads/udpt
 setenv          GA2UDXT             GRADSPREFIX/lib/grads/gex/udxt
+setenv          GAGPY               GRADSPREFIX/lib/libgradspy.so
