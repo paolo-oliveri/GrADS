@@ -52,7 +52,7 @@ function prevdir(exprx,expry,nsec,opt,filter)
   endif
   nvalid.i=stat(sector,'valid')
   dir.i=l1+width/2
-*  if(_INFO);say 'INFO - nel='nvalid.i' sector='i' dir='dir.i;endif
+* if(_INFO);say 'INFO - nel='nvalid.i' sector='i' dir='dir.i;endif
  endwhile
 #-- trasformo il vettore in stringa
  string=''
@@ -63,7 +63,7 @@ function prevdir(exprx,expry,nsec,opt,filter)
  found=0
  max=getMax(string)
  imax1=1
- say 'array:'string'  max:'max'  (calm S SW W NW N NE E SE)'
+* if(_INFO); say 'array:'string'  max:'max'  (calm S SW W NW N NE E SE)';endif
  if(nvalid.imax1=max)
   found=1
   dirp=dir.imax1
@@ -115,7 +115,7 @@ function prevdir(exprx,expry,nsec,opt,filter)
  if(dirp=0);dirp=360;endif
  if(dirp='Calm');dirp=0;endif
  if(dirp='Variable');dirp=-1;endif
- say '>>> dirp='dirp
+ if(_INFO);say '>>> dirp='dirp;endif
  'set gxout contour'
  'set gxout value'
 return dirp
