@@ -1,16 +1,24 @@
+#---------------------------------------
 #-- torna la porzione di expr compresa tra thr1 e thr2
 #-- se opt vale 'outside' torna la porzione esclusa
 #-- dvd 2020/01
+#-- dvd 2023/09: e' cambiata la sintassi di if() da if(expr,op,thr,true,false) a if(expr op thr,true,false) (logical IFSYNTAX)
+#-- la sintassi nuova ha dei problemi (ad esempio con i -u e con & | si puo' usare la scrittura di quella vecchia (if_) con IFSYNTAX
 function inside(expr,thr1,thr2,opt,value,opt2)
+* IFSYNTAX=0;# old if() syntax
+* IFSYNTAX=1;# new if() syntax
+ IFSYNTAX=2;# new if_() syntax
  if(expr='help' | expr='expr' | thr2='thr2')
   say 'uso: inside(expr,thr1,thr2,[opt],[value],[opt2])'
   say 'torna la porzione di expr compresa tra thr1 e thr2'
   say 'se opt vale outside torna la porzione esclusa, se inside (default) quella inclusa'
   say 'se value ha un valore nella zona non voluta ci mette quel valore, altrimenti lo lascia undef'
   say 'se opt2 ha un valore stabilisce come comportasi sui bordi: << (default), <=, =<, =='
+  say 'usa IFSYNTAX='IFSYNTAX
   say
   return
  endif
+* if(_DEBUG);say 'inside('expr','thr1','thr2','opt','value','opt2')';endif
  if(value='value' | value='');value='-u';endif
  if(opt='opt' | opt='');opt='inside';endif
  if(opt2='opt2' | opt2='');opt2='<<';endif
@@ -19,14 +27,18 @@ function inside(expr,thr1,thr2,opt,value,opt2)
   if(opt2='==');op1='>=';op2='<=';endif
   if(opt2='<=');op1='>';op2='<=';endif
   if(opt2='=<');op1='>=';op2='<';endif
-  ret='if('expr','op1','thr1',if('expr','op2','thr2','expr','value'),'value')'
+  if(IFSYNTAX=0);ret='if('expr','op1','thr1',if('expr','op2','thr2','expr','value'),'value')';endif
+  if(IFSYNTAX=1);ret='if('expr%op1%thr1',if('expr%op2%thr2','expr','value'),'value')';endif
+  if(IFSYNTAX=2);ret='if_('expr','op1','thr1',if_('expr','op2','thr2','expr','value'),'value')';endif
  endif
  if(opt='outside')
   if(opt2='<<');op1='<';op2='>';endif
   if(opt2='==');op1='<=';op2='>=';endif
   if(opt2='<=');op1='<';op2='>=';endif
   if(opt2='=<');op1='<=';op2='>';endif
-  ret='if('expr','op1','thr1','expr',if('expr','op2','thr2','expr','value'))'
+  if(IFSYNTAX=0);ret='if('expr','op1','thr1','expr',if('expr','op2','thr2','expr','value'))';endif
+  if(IFSYNTAX=1);ret='if('expr%op1%thr1','expr',if('expr%op2%thr2','expr','value'))';endif
+  if(IFSYNTAX=2);ret='if_('expr','op1','thr1','expr',if_('expr','op2','thr2','expr','value'))';endif
  endif
-* if(_DEBUG);say ret;endif
+* if(_DEBUG);say 'INFO - IFSYNTAX:'IFSYNTAX' inside():'ret;endif
 return ret

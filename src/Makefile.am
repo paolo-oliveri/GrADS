@@ -150,7 +150,7 @@ libgradspy_la_SOURCES  = grads.c gxsubs.c gxmeta.c  gxchpl.c gxcntr.c gxstrm.c g
 libgradspy_la-grads.o: $(srcdir)/grads.c
 	$(COMPILE) -DSHRDOBJ -o libgradspy_la-grads.lo -c $(srcdir)/grads.c
 
-libgradspy_la_CFLAGS   = -DSHRDOBJ
+libgradspy_la_CFLAGS   = -DOPENGRADS -DSHRDOBJ
 libgradspy_la_CPPFLAGS = -I. $(gui_inc) $(geotiff_inc) \
                          $(nc_inc) $(hdf_inc) $(hdf5_inc) \
                          $(shp_inc) $(gadap_inc) $(X_CFLAGS) $(XAW_CFLAGS)

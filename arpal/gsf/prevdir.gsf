@@ -1,0 +1,157 @@
+#---------------------------------------
+#-- dato un dataset di U e V (exprx,expry) torna la direzione prevalente suddividendo le direzioni in nsec settori
+#-- se opt vale 'wind' (default) calcola la direzione di provenienza, altrimenti quella di arrivo
+#-- se filter vale 1 applica il filtro WMO (ha senso solo per serie temporali in un unico punto)
+function prevdir(exprx,expry,nsec,opt,filter)
+ _INFO=0
+ _DEBUG=0
+ if(exprx='help')
+  say 'uso: prevailingDir exprx[u|u10|...] expry[v|v10|...] nsec[8...] opt[wind|wave] filter[0|1]'
+  say '     il primo argomento proposto e` il default (u v 8 wind 0)'
+ endif
+ if(exprx='' | exprx='exprx');exprx='u';endif
+ if(expry='' | expry='expry');expry='v';endif
+ if(nsec='' | nsec='nsec');nsec=8;endif
+ if(opt='' | opt='opt');opt='wind';endif
+ if(filter='' | filter='filter');filter=0;endif
+ if(opt!='wind' & opt!='wave');say '!!! prevdir FATAL: opt must be wind|wave while opt='opt;return;endif
+ width=360/nsec
+* if(_INFO);say 'INFO - nsec:'nsec' width:'width;endif
+#-- variabile ddd: direzione di provenienza del vento o propagazione delle onde, in gradi
+* if(_INFO);say 'INFO - define ddd=atan2d('exprx','expry','opt')';endif
+ 'define ddd=atan2d('exprx','expry','opt')'
+ nvalid=stat('ddd','valid')
+ 'define ddd=maskout(ddd,mag('exprx','expry')-0.5)'
+#--   settore 1: calma di vento
+#--   settore 2: vento che proviene da S
+#--   settore 3: vento che proviene da SW
+#--   settore 4: vento che proviene da W
+#--   settore 5: vento che proviene da NW
+#--   settore 6: vento che proviene da N
+#--   settore 7: vento che proviene da NE
+#--   settore 8: vento che proviene da E
+#--   settore 9: vento che proviene da SE
+#--   nvalid.i: numero di elementi che appartengono al settore i (i=1,2,...,9)
+#--   dir.i: direzione centrale del settore i
+#--   nella definizione WMO dopo aver verificato che il massimo non sia una calma bisognerebbe applicare un filtro al vettore circolare:
+#--   Xf(i) = 1/9*X(i-2) + 2/9*X(i-1) + 3/9*X(i) + 2/9*X(i+1) + 1/9*X(i+2) 
+ i=1
+ nvalid.i=stat('ddd','undef')
+ dir.i='Calm'
+* if(_INFO);say 'INFO - nel='nvalid.i' sector='i' dir='dir.i;endif
+ l1=-180-width/2
+ i=1;while(i<=nsec);i=i+1
+  l1=l1+width
+  if(i=1)
+   l2=-1*l1
+   sector='inside(ddd,'l1','l2',outside,-u,=<)'
+  l1=l1-width
+  else
+   l2=l1+width
+   sector='inside(ddd,'l1','l2',inside,-u,<=)'
+  endif
+  nvalid.i=stat(sector,'valid')
+  dir.i=l1+width/2
+*  if(_INFO);say 'INFO - nel='nvalid.i' sector='i' dir='dir.i;endif
+ endwhile
+#-- trasformo il vettore in stringa
+ string=''
+ i=0;while(i<=nsec);i=i+1
+  if(string='');string=nvalid.i;else;string=string' 'nvalid.i;endif
+ endwhile
+#-- verifico che la calma non sia un massimo (altrimenti prevale la calma)
+ found=0
+ max=getMax(string)
+ imax1=1
+ say 'array:'string'  max:'max'  (calm S SW W NW N NE E SE)'
+ if(nvalid.imax1=max)
+  found=1
+  dirp=dir.imax1
+  if(_INFO);say 'max='nvalid.imax1'/'nvalid' sector='imax1' dir='dirp;endif
+ else
+#-- ritrasformo il vettore in stringa escludendo le calme
+  string=''
+  i=1;while(i<=nsec);i=i+1
+   if(string='');string=nvalid.i;else;string=string' 'nvalid.i;endif
+  endwhile
+#-- filtro i dati
+  if(filter);string=circularFilter(string);endif
+#-- trovo il/i massimi
+  imax=getMaxPos(string)
+  imax1=subwrd(imax,1)
+  imax2=subwrd(imax,2)
+  imax3=subwrd(imax,3)
+  if(_INFO);say 'imax='imax' imax1='imax1' imax2='imax2' imax3='imax3;endif
+#-- ho un solo max: e' quello
+  if(imax2='')
+   found=1
+   dirp=dir.imax1
+   if(_INFO);say 'max='%subwrd(string,imax1)%'/'nvalid' sector='imax1' dir='dirp;endif
+  else
+#-- ho due max uguali: li considero se sono contigui (caso 1-2, ..., 7-8)
+   if(imax3='' & imax1>0 & imax2=imax1+1)
+    found=1
+    dirp=dir.imax1+width/2
+    if(_INFO);say '2 max:'%subwrd(string,imax1)%'/'nvalid','%subwrd(string,imax2)%'/'nvalid' sectors='imax1','imax2' dir='dirp;endif
+   endif
+#-- ho due max uguali: li considero se sono contigui (caso 1-8)
+   if(imax3='' & imax1>0 & imax2-imax1=nsec-1)
+    found=1
+    dirp=dir.imax1+width/2
+    if(_INFO);say '2 max:'%subwrd(string,imax1)%'/'nvalid','%subwrd(string,imax2)%'/'nvalid' sectors='imax1','imax2' dir='dirp;endif
+   endif
+  endif
+ endif
+#-- se ho piu' di due max o se ne ho due non contigui o se ne ho due di cui uno e' la calma rinuncio
+ if(!found)
+  dirp='Variable'
+  if(_INFO);say 'max='%subwrd(string,imax1)%'/'nvalid' no prevalent sector found';endif
+ endif
+#-- trasformo la dir dal range -180 180 in 0 360
+ if(valnum(dirp))
+  dirp=math_mod(dirp+360,360)
+ endif
+#-- uso la codifica DB: trasformo lo 0 in 360, le calme in 0, le variabili in -1
+ if(dirp=0);dirp=360;endif
+ if(dirp='Calm');dirp=0;endif
+ if(dirp='Variable');dirp=-1;endif
+ say '>>> dirp='dirp
+ 'set gxout contour'
+ 'set gxout value'
+return dirp
+
+#-----------------------------------------------------------------
+#-- accetta un vettore (stringa) senza le calme lo trasforma in un vettore circolare, applica il filtro e ritorna il vettore filtrato 
+#-- funzione ad uso esclusivo di prevailingDir
+function circularFilter(array)
+ nsec=linlen(array)
+ filtered=''
+ i=0;while(i<nsec)
+*  valp2=getStrArrVal(array,math_mod(i+2,nsec))
+  im2=math_mod(nsec+i-2,nsec)
+  im1=math_mod(nsec+i-1,nsec)
+  ip1=math_mod(i+1,nsec)
+  ip2=math_mod(i+2,nsec)
+  if(_INFO);say 'INFO filter index i: 'im2' 'im1' 'i' 'ip1' 'ip2;endif
+  valm2=getStrArrVal(array, im2)
+  valm1=getStrArrVal(array,im1)
+  valp0=getStrArrVal(array,i)
+  valp1=getStrArrVal(array,ip1)
+  valp2=getStrArrVal(array,ip2)
+#--   Xf(i) = 1/9*X(i-2) + 2/9*X(i-1) + 3/9*X(i) + 2/9*X(i+1) + 1/9*X(i+2)
+  val=1/9*valm2 + 2/9*valm1 + 3/9*valp0 + 2/9*valp1 + 1/9*valp2
+  val=math_format('%.2f',val)
+  if(_INFO);say 'INFO filter v: 'valm2' 'valm1' 'valp0' 'valp1' 'valp2' -> 'val;endif
+  if(filtered='');filtered=val;else;filtered=filtered' 'val;endif
+  i=i+1
+ endwhile
+ if(_INFO);say 'INFO before filter array is: 'array;endif
+ if(_INFO);say 'INFO  after filter array is: 'filtered;endif
+return filtered
+
+#-----------------------------------------------------------------
+#-- torna la word index+1 della stringa array
+#-- serve per poter mantenere l'array con indice 0...N-1 mentre le subwrd vanno variano come 1...N
+function getStrArrVal(array,index)
+* say array ' - 'index
+return subwrd(array,index+1)
