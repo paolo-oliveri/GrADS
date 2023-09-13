@@ -1,0 +1,9 @@
+#-----------------------------------------------------------------
+#-- elimina i primi N elementi del vettore (a stringa) string
+function shift(N,string)
+ len=linlen(string)
+ strout=subwrd(string,N+1)
+ i=N+1;while(i<len);i=i+1
+  strout=strout' '%subwrd(string,i)
+ endwhile
+return strout
