@@ -229,6 +229,14 @@ function getFormula(var)
  if( var='t2c' & checkList('t2',varList) )
   return '-273.15+t2'
  endif
+#-- mxt2c <- mxt2
+ if( var='mxt2c' & checkList('mxt2',varList) )
+  return '-273.15+mxt2'
+ endif
+#-- mnt2c <- mnt2
+ if( var='mnt2c' & checkList('mnt2',varList) )
+  return '-273.15+mnt2'
+ endif
 #-- tc <- t
  if( var='tc' & checkList('t',varList) )
   return '-273.15+t'
