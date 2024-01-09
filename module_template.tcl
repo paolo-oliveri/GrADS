@@ -30,4 +30,4 @@ setenv          GASHP               GRADSPREFIX/share/grads/shapefiles
 setenv          GASCRP              "$env(HOME)/grads/scripts GRADSPREFIX/lib/grads/scripts/ GRADSPREFIX/lib/grads/scripts/arc"
 setenv          GAUDPT              GRADSPREFIX/share/grads/udpt
 setenv          GA2UDXT             GRADSPREFIX/share/grads/gex/udxt
-setenv          GAGPY               GRADSPREFIX/share/libgradspy.so
+setenv          GAGPY               GRADSPREFIX/lib/libgradspy.so
