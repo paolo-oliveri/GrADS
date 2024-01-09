@@ -49,8 +49,8 @@ ifeq ($(HAS_CC),no)
       $(error Cannot proceed without a C compiler )
 endif
 
-CPPFLAGS := -D___GAUDX___ -I. -I$(GAINC)
-CFLAGS   := $(LDFLAGS) -O -fno-common -fPIC 
+override CFLAGS   += -O -fno-common -fPIC 
+override CPPFLAGS += -D___GAUDX___ -I. -I$(GAINC)
 
 # C compiler library
 # ------------------
@@ -66,7 +66,7 @@ hintF77 = gfortran#        user can suggest something different
 F77 = $(hintF77)
 F90 = $(hintF90)
 FC  = $(F77)
-FFLAGS = $(FOPT) -I. -I$(GAINC)
+override FFLAGS = $(FOPT) -I. -I$(GAINC)
 
 # FOPT = -g -fbounds-check
 
@@ -145,7 +145,7 @@ endif
 #                          --------------
 
 LD := $(CC)
-LDFLAGS := -shared 
+override LDFLAGS := -shared 
 DLLEXT:=so
 
 LIBS += $(CLIBS) $(FLIBS) 
@@ -184,10 +184,10 @@ ifeq ($(ARCH),AIX)
 # -----
 else
 ifeq ($(ARCH),Linux)
-	FFLAGS += -fPIC
+	override FFLAGS += -fPIC
 	DLLEXT=so
 	LD = $(CC)
-	LDFLAGS += -nostartfiles
+	override LDFLAGS += -nostartfiles
 #        CLIBS=
 #        FLIBS=
 else
@@ -209,10 +209,10 @@ ifeq ($(OS),Cygwin)
 	LDFLAGS += -nostartfiles $(LIBGRADS)
 endif
 
-CFLAGS   += $(XCFLAGS)
-CPPFLAGS += $(XCPPFLAGS)
-LDFLAGS  += $(XLDFLAGS)
-FFLAGS   += $(XFFLAGS)
+override CFLAGS   += $(XCFLAGS)
+override CPPFLAGS += $(XCPPFLAGS)
+override LDFLAGS  += $(XLDFLAGS)
+override FFLAGS   += $(XFFLAGS)
 
 #                            -----------------------
 #                                 Building Rules
@@ -291,7 +291,7 @@ clean distclean:
 	cpp -ansi -DPOD $*.c | pod2wiki --style mediawiki > $*.wiki
 
 %.gex : %.o $(EXTRAS)
-	$(LD) $(LDFLAGS) -o $@ $*.o $(EXTRAS) $(LIBS) $(LDFLAGS)
+	$(LD) -o $@ $*.o $(EXTRAS) $(LIBS) $(LDFLAGS)
 
 %.x : %.o
 	$(FC) $(FFLAGS) -o $@ $*.f
