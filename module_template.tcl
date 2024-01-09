@@ -24,10 +24,10 @@ append-path     LD_LIBRARY_PATH     GRADSPREFIX/lib:/usr/local/lib/
 
 setenv          GABDIR              GRADSPREFIX/bin/
 setenv          GAINC               GRADSPREFIX/include/
-setenv          GADDIR              GRADSPREFIX/lib/grads
+setenv          GADDIR              GRADSPREFIX/share/grads
 setenv          GADSET              GRADSPREFIX/datasets
-setenv          GASHP               GRADSPREFIX/lib/grads/shapefiles
+setenv          GASHP               GRADSPREFIX/share/grads/shapefiles
 setenv          GASCRP              "$env(HOME)/grads/scripts GRADSPREFIX/lib/grads/scripts/ GRADSPREFIX/lib/grads/scripts/arc"
-setenv          GAUDPT              GRADSPREFIX/lib/grads/udpt
-setenv          GA2UDXT             GRADSPREFIX/lib/grads/gex/udxt
-setenv          GAGPY               GRADSPREFIX/lib/libgradspy.so
+setenv          GAUDPT              GRADSPREFIX/share/grads/udpt
+setenv          GA2UDXT             GRADSPREFIX/share/grads/gex/udxt
+setenv          GAGPY               GRADSPREFIX/share/libgradspy.so
