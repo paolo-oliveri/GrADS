@@ -296,6 +296,9 @@ int main (int argc, char *argv[])  {
   else 
     snprintf(gcmn.gxpopt,15,"Cairo");       /* ... if not specified, default is Cairo       */
 
+  /* Paolo Oliveri e Davide Sacchetti, 20240202 */
+  upba = NULL;
+
   /* Read the user defined plug-in table */
   gaudpdef();  
 
