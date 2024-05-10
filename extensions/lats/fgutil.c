@@ -14,6 +14,7 @@
 #include <math.h>
 #include <float.h>
 #include "fgrib.h"
+#include "latsint.h"
 
 static unsigned int mask[] = {0,1,3,7,15,31,63,127,255};
 

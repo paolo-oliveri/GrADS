@@ -1132,11 +1132,13 @@ c
       nn=n                                                          
       if(n.le.50) go to 12                                          
       bes(50)=bz(50)                                                
-      do 5 j=51,n                                                   
-    5 bes(j)=bes(j-1)+pi                                            
+      do j=51,n                                                   
+      bes(j)=bes(j-1)+pi
+      enddo
       nn=49                                                         
-   12 do 15 j=1,nn                                                  
-   15 bes(j)=bz(j)                                                  
+   12 do j=1,nn                                                  
+      bes(j)=bz(j)
+      enddo
       return                                                        
       end                                                           
 
@@ -1327,15 +1329,16 @@ c
       do 30 is=1,kk                                                 
       xz=cos(a(is)/sqrt((fk+0.5d0)**2+c))                           
       iter=0                                                        
-   10 pkm2=1.d0                                                     
+   10 pkm2=1.d0
       pkm1=xz                                                       
       iter=iter+1                                                   
       if(iter.gt.10) go to 70                                       
-      do 20 n=2,k                                                   
+      do n=2,k                                                   
       fn=n                                                          
       pk=((2.d0*fn-1.d0)*xz*pkm1-(fn-1.d0)*pkm2)/fn                 
       pkm2=pkm1                                                     
-   20 pkm1=pk                                                       
+      pkm1=pk
+      enddo
       pkm1=pkm2                                                     
       pkmrk=(fk*(pkm1-xz*pk))/(1.d0-xz**2)                          
       sp=pk/pkmrk                                                   
@@ -1347,9 +1350,10 @@ c
       if(k.eq.kk*2) go to 50                                        
       a(kk+1)=0.d0                                                  
       pk=2.d0/fk**2                                                 
-      do 40 n=2,k,2                                                 
+      do n=2,k,2                                                 
       fn=n                                                          
-   40 pk=pk*fn**2/(fn-1.d0)**2                                      
+      pk=pk*fn**2/(fn-1.d0)**2
+      enddo
    50 continue                                                      
       do 60 n=1,kk                                                  
       l=k+1-n                                                       

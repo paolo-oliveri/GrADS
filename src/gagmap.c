@@ -48,7 +48,7 @@
 #include "grib2.h"
 void gaseekgb(FILE *, off_t, g2int, off_t *, g2int *);
 #endif
-
+void gbit(unsigned char *in, g2int *iout, g2int iskip, g2int nbits);
 
 /* global variables */
 extern struct gamfcmn mfcmn;

@@ -25,7 +25,7 @@
 #include <stdio.h>
 #include "grads.h"
 
-static counter = 0; /* Illustrates how to keep a state */
+static int counter = 0; /* Illustrates how to keep a state */
 
 /* Sample Hello, World! user defined command */
 

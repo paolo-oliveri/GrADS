@@ -190,11 +190,11 @@ class GaCore(GrADSObject):
         self.HAS_UDXT = False
         self.HAS_UDCT = False # old v1.9.0-rc1 style (deprecated)
         self.cmd('q udxt',Quiet=True)
-        if self.rword(1,1) is not 'Invalid':
+        if self.rword(1,1) != 'Invalid':
             self.HAS_UDXT = True
         else:
             self.cmd('q udct',Quiet=True) # as in v1.9.0-rc1
-            if self.rword(1,1) is not 'Invalid':
+            if self.rword(1,1) != 'Invalid':
                 self.HAS_UDXT = True
                 self.HAS_UDCT = True
 
@@ -573,7 +573,7 @@ class GaCore(GrADSObject):
 
 #           Ensemble dimension only supported in GrADS v2.0
 #           -----------------------------------------------
-            if self.Version[1] is '2':
+            if self.Version[1] == '2':
                 qh.e_state = self.rword(6,3)
                 if qh.e_state == 'fixed':
                     qh.ens = (self.rword(6,6), self.rword(6,6))
@@ -624,7 +624,7 @@ class GaCore(GrADSObject):
             qh.ny    = int(self.rword(5,6))
             qh.nz    = int(self.rword(5,9))
             qh.nt    = int(self.rword(5,12))
-            if self.Version[1] is '2':
+            if self.Version[1] == '2':
                 qh.ne = int(self.rword(5,15))
             else:
                 qh.ne = 1
@@ -844,12 +844,12 @@ class GaCore(GrADSObject):
         self.cmd("set x 1",Quiet=True)
         self.cmd("set y 1",Quiet=True)
         self.cmd("set z 1",Quiet=True)
-        if self.Version[1] is '2':
+        if self.Version[1] == '2':
             self.cmd("set e 1",Quiet=True)
 
 #       ensemble coordinates
 #       --------------------
-        if self.Version[1] is '2':
+        if self.Version[1] == '2':
             ch.ens = []
             for n in range(dh.ne):
                 e = dh.ei[0] + n
@@ -888,7 +888,7 @@ class GaCore(GrADSObject):
 
 #       Retore dimension environment
 #       ----------------------------
-        if self.Version[1] is '2':
+        if self.Version[1] == '2':
             self.cmd("set e %d %d"%dh.ei,Quiet=True)
         self.cmd("set t %d %d"%dh.ti,Quiet=True)
         self.cmd("set z %d %d"%dh.zi,Quiet=True)
@@ -1059,7 +1059,7 @@ class GaCore(GrADSObject):
             self.cmd("set y %d %d"%dh.y,Quiet=True)
             self.cmd("set z %d %d"%dh.z,Quiet=True)
             self.cmd("set t %d %d"%dh.t,Quiet=True)
-            if self.Version[1] is '2':
+            if self.Version[1] == '2':
                 self.cmd("set e %d %d"%dh.e,Quiet=True)
         except GrADSError:
             raise GrADSError('Cannot restore dimension environment')

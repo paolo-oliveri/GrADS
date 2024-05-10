@@ -407,6 +407,8 @@ extern void latsWarning(char *fmt, ...);
 
 extern int latsTimeCmp(latsCompTime t1, latsCompTime t2);
 
+extern void latsCpyTrim(char* sink, char* src, int n);
+extern void latsCpyLower(char* sink, char* src, int n);
 /*
  * =================================================================
  *			Globals

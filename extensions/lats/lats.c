@@ -655,7 +655,7 @@ int lats_grid(char *name, int gridtype, int nlon, double lons[], int nlat, doubl
 /* Set the quality control:
    qcopt = LATS_QC_ON iff turn on quality control calculations
    qcopt = 0 iff turn off QC calcs */
-void lats_qcopt(qcopt){
+void lats_qcopt(int qcopt){
 	lats_qc = (qcopt & LATS_QC_ON);
 }
 

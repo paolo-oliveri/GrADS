@@ -327,7 +327,7 @@ int c_path ( int argc, char **argv, struct gacmn *pcm) {
 
   /* glob */
   } else if ( strcmp(argv[0],"glob") == 0  ) {
-    rc = glob(argv[1],0,(int *) NULL, &flist);
+    rc = glob(argv[1],0,NULL, &flist);
     if (rc) {
       switch (rc) {
         case GLOB_NOMATCH: 

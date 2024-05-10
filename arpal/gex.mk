@@ -18,6 +18,7 @@ endif
 
 gexdir = $(bindir)/gex/$(bintype)
 gsfdir = $(bindir)/scripts/
+shapedir = $(bindir)/shapefiles/
 
 #
 #                          C  Compiler Check
@@ -249,6 +250,12 @@ install : $(UDXS) $(UDXT) $(PODS)
         ifneq ($(GSFS), )
 	    /bin/cp -rp $(GSFS)              $(gsfdir)
         endif
+        ifneq ($(DADS), )
+	    /bin/cp -rp $(DADS)              $(bindir)
+        endif
+        ifneq ($(SHDS), )
+	    /bin/cp -rp $(SHDS)              $(shapedir)
+        endif
 
 html : $(HTMS)
 
@@ -291,7 +298,7 @@ clean distclean:
 	cpp -ansi -DPOD $*.c | pod2wiki --style mediawiki > $*.wiki
 
 %.gex : %.o $(EXTRAS)
-	$(LD) -o $@ $*.o $(EXTRAS) $(LIBS) $(LDFLAGS)
+	$(LD) $(LDFLAGS) -o $@ $*.o $(EXTRAS) $(LIBS)
 
 %.x : %.o
 	$(FC) $(FFLAGS) -o $@ $*.f

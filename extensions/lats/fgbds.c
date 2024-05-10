@@ -14,6 +14,7 @@
 #include <string.h>
 #include "fgrib.h"
 #include "grads.h"
+#include "latsint.h"
 /*
   
   routine to grib 1 pack a floating point array

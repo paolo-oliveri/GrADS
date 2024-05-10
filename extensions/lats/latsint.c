@@ -140,6 +140,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include "latsint.h"
 #include "latsparm.h"
 
@@ -687,136 +688,6 @@ int latsParmJoinVert(char *path){
 	return 1;
 }
 
-/* Create the parm table from the file with given 'path'.
- * Return 1 if successful, 0 if an error occurred.
- * 
- * Note: this function sets the parm table latsParmTable
- * with the entries in 'path'; any previous
- * entries are deleted. If an error occurs, it should be 
- * assumed that the parameter table information may have
- * been destroyed.
- */
-
-int latsParmCreateTable(char* path) {
-	char parmEntry[LATS_MAX_PARM_LINE];
-	char tempEntry[LATS_MAX_PARM_LINE];
-	char tempname[LATS_MAX_NAME];
-	int iline, nvar, nvert, ncenter, nqc;
-	int currentTable;
-	char *cp;
-	int lats_save_fatal;
-	
-	enum table_type {LATS_VAR_TABLE, LATS_VERT_TABLE,
-			 LATS_CENTER_TABLE, LATS_QC_TABLE};
-	
-	lats_save_fatal = lats_fatal;
-	nvar = nvert = ncenter = nqc = 0;
-	currentTable = LATS_VAR_TABLE;
-	
-	/*mf 970818 - close if already open and issue warning mf*/
-	
-	if(parmFile != NULL) {
-		fclose(parmFile);
-		latsWarning("Closing the previously opened Parameter Table: %s",path);
-	}
-	
-	/* Open the file */
-	if((parmFile = fopen(path, "r"))==NULL){
-		latsError("LATS (latsint.c) --> Cannot open parameter file %s",path);
-		perror("");
-		return 0;
-	}
-	/* Scan the file */
-	for(iline=1; fgets(parmEntry, LATS_MAX_PARM_LINE-1, parmFile); iline++){
-		/* Check for comments and section delimiters */
-		if(parmEntry[0]=='#'){
-			if(parmEntry[1]=='!'){	     /* Section delimiter? */
-				latsCpyTrim(tempname, parmEntry+2, LATS_MAX_NAME);
-				for(cp = tempname; *cp; cp++)
-					*cp = tolower(*cp);
-				if(!strcmp(tempname,"variable"))
-					currentTable = LATS_VAR_TABLE;
-				else if(!strcmp(tempname,"vert"))
-					currentTable = LATS_VERT_TABLE;
-				else if(!strcmp(tempname,"center"))
-					currentTable = LATS_CENTER_TABLE;
-				else if(!strcmp(tempname,"qc"))
-					currentTable = LATS_QC_TABLE;
-				else {
-					latsError("LATS (latsint.c) --> Warning: section delimiter: %s, ignored in parameter file %s, line %d",
-						  tempname, path, iline);
-				}
-			}
-			continue;			     /* Skip comments, section delimiters */
-		}
-		/* Check for blank lines */
-		else {
-			latsCpyTrim(tempEntry, parmEntry, LATS_MAX_PARM_LINE);
-			if(tempEntry[0] == '\0') continue;
-		}
-		
-		/* Call the appropriate table routine */
-		
-		lats_fatal = 0;			     /* Turn off error flag temporarily so that line number can be reported */
-		switch(currentTable){
-		case LATS_VAR_TABLE:
-			if(latsParmFillVarTable(parmEntry, nvar) == 0) goto error;
-			nvar++;
-			break;
-		case LATS_VERT_TABLE:
-			if(latsParmFillVertTable(parmEntry, nvert) == 0) goto error;
-			nvert++;
-			break;
-		case LATS_CENTER_TABLE:
-			if(latsParmFillCenterTable(parmEntry, ncenter) == 0) goto error;
-			ncenter++;
-			break;
-		case LATS_QC_TABLE:
-			if(latsParmFillQCTable(parmEntry, nqc) == 0) goto error;
-			nqc++;
-			break;
-		}
-		lats_fatal = lats_save_fatal;
-	}
-	/* Error if too many variables */
-	if(nvar >= LATS_MAX_PARMS) {
-		latsError("LATS (latsint.c) --> Maximum number of parameters = %d, remainder ignored, file %s", LATS_MAX_PARMS, path);
-		nvar--;
-	}
-	latsParmTableSize = nvar;
-	/* Sort the parameter table */
-	qsort(latsParmTable, latsParmTableSize, sizeof(latsParm), (int (*)(const void *, const void *))latsSortParms);
-	
-	if(nvert >= LATS_MAX_VERT_TYPES){
-		latsError("LATS (latsint.c) --> Maximum number of vertical dimension types = %d, remainder ignored, file %s", LATS_MAX_VERT_TYPES, path);
-		nvert--;
-	}
-	latsVertTableSize = nvert;
-	
-	/* Join parameter table to vertical types table
-	   (Note: depends on latsVertTable being set) */
-	if(latsParmJoinVert(path)==0)
-		return 0;
-	
-	if(ncenter >= LATS_MAX_CENTERS){
-		latsError("LATS (latsint.c) --> Maximum number of centers = %d, remainder ignored, file %s", LATS_MAX_CENTERS, path);
-		ncenter--;
-	}
-	latsCenterTableSize = ncenter;
-	
-	latsQCTableSize = nqc;
-	/* Sort the QC table */
-	qsort(latsQCTable, latsQCTableSize, sizeof(latsParmQC), (int (*)(const void *, const void *))latsSortQC);
-	
-	fclose(parmFile);
-	return 1;
-	
-error:
-	lats_fatal = lats_save_fatal;
-	latsError("LATS (latsint.c) --> line %d, parameter file %s", iline, path);
-	return 0;
-}
-
 /* Fill the parameter table. 'nvar' is the 0-origin index of the parameter, 
  * Return 1 on success, 0 on failure.
  */
@@ -1066,6 +937,136 @@ int latsParmFillQCTable(char *parmEntry, int nitem){
 	}
 	
 	return 1;
+}
+
+/* Create the parm table from the file with given 'path'.
+ * Return 1 if successful, 0 if an error occurred.
+ * 
+ * Note: this function sets the parm table latsParmTable
+ * with the entries in 'path'; any previous
+ * entries are deleted. If an error occurs, it should be 
+ * assumed that the parameter table information may have
+ * been destroyed.
+ */
+
+int latsParmCreateTable(char* path) {
+	char parmEntry[LATS_MAX_PARM_LINE];
+	char tempEntry[LATS_MAX_PARM_LINE];
+	char tempname[LATS_MAX_NAME];
+	int iline, nvar, nvert, ncenter, nqc;
+	int currentTable;
+	char *cp;
+	int lats_save_fatal;
+	
+	enum table_type {LATS_VAR_TABLE, LATS_VERT_TABLE,
+			 LATS_CENTER_TABLE, LATS_QC_TABLE};
+	
+	lats_save_fatal = lats_fatal;
+	nvar = nvert = ncenter = nqc = 0;
+	currentTable = LATS_VAR_TABLE;
+	
+	/*mf 970818 - close if already open and issue warning mf*/
+	
+	if(parmFile != NULL) {
+		fclose(parmFile);
+		latsWarning("Closing the previously opened Parameter Table: %s",path);
+	}
+	
+	/* Open the file */
+	if((parmFile = fopen(path, "r"))==NULL){
+		latsError("LATS (latsint.c) --> Cannot open parameter file %s",path);
+		perror("");
+		return 0;
+	}
+	/* Scan the file */
+	for(iline=1; fgets(parmEntry, LATS_MAX_PARM_LINE-1, parmFile); iline++){
+		/* Check for comments and section delimiters */
+		if(parmEntry[0]=='#'){
+			if(parmEntry[1]=='!'){	     /* Section delimiter? */
+				latsCpyTrim(tempname, parmEntry+2, LATS_MAX_NAME);
+				for(cp = tempname; *cp; cp++)
+					*cp = tolower(*cp);
+				if(!strcmp(tempname,"variable"))
+					currentTable = LATS_VAR_TABLE;
+				else if(!strcmp(tempname,"vert"))
+					currentTable = LATS_VERT_TABLE;
+				else if(!strcmp(tempname,"center"))
+					currentTable = LATS_CENTER_TABLE;
+				else if(!strcmp(tempname,"qc"))
+					currentTable = LATS_QC_TABLE;
+				else {
+					latsError("LATS (latsint.c) --> Warning: section delimiter: %s, ignored in parameter file %s, line %d",
+						  tempname, path, iline);
+				}
+			}
+			continue;			     /* Skip comments, section delimiters */
+		}
+		/* Check for blank lines */
+		else {
+			latsCpyTrim(tempEntry, parmEntry, LATS_MAX_PARM_LINE);
+			if(tempEntry[0] == '\0') continue;
+		}
+		
+		/* Call the appropriate table routine */
+		
+		lats_fatal = 0;			     /* Turn off error flag temporarily so that line number can be reported */
+		switch(currentTable){
+		case LATS_VAR_TABLE:
+			if(latsParmFillVarTable(parmEntry, nvar) == 0) goto error;
+			nvar++;
+			break;
+		case LATS_VERT_TABLE:
+			if(latsParmFillVertTable(parmEntry, nvert) == 0) goto error;
+			nvert++;
+			break;
+		case LATS_CENTER_TABLE:
+			if(latsParmFillCenterTable(parmEntry, ncenter) == 0) goto error;
+			ncenter++;
+			break;
+		case LATS_QC_TABLE:
+			if(latsParmFillQCTable(parmEntry, nqc) == 0) goto error;
+			nqc++;
+			break;
+		}
+		lats_fatal = lats_save_fatal;
+	}
+	/* Error if too many variables */
+	if(nvar >= LATS_MAX_PARMS) {
+		latsError("LATS (latsint.c) --> Maximum number of parameters = %d, remainder ignored, file %s", LATS_MAX_PARMS, path);
+		nvar--;
+	}
+	latsParmTableSize = nvar;
+	/* Sort the parameter table */
+	qsort(latsParmTable, latsParmTableSize, sizeof(latsParm), (int (*)(const void *, const void *))latsSortParms);
+	
+	if(nvert >= LATS_MAX_VERT_TYPES){
+		latsError("LATS (latsint.c) --> Maximum number of vertical dimension types = %d, remainder ignored, file %s", LATS_MAX_VERT_TYPES, path);
+		nvert--;
+	}
+	latsVertTableSize = nvert;
+	
+	/* Join parameter table to vertical types table
+	   (Note: depends on latsVertTable being set) */
+	if(latsParmJoinVert(path)==0)
+		return 0;
+	
+	if(ncenter >= LATS_MAX_CENTERS){
+		latsError("LATS (latsint.c) --> Maximum number of centers = %d, remainder ignored, file %s", LATS_MAX_CENTERS, path);
+		ncenter--;
+	}
+	latsCenterTableSize = ncenter;
+	
+	latsQCTableSize = nqc;
+	/* Sort the QC table */
+	qsort(latsQCTable, latsQCTableSize, sizeof(latsParmQC), (int (*)(const void *, const void *))latsSortQC);
+	
+	fclose(parmFile);
+	return 1;
+	
+error:
+	lats_fatal = lats_save_fatal;
+	latsError("LATS (latsint.c) --> line %d, parameter file %s", iline, path);
+	return 0;
 }
 
 /* Lookup a vertical dimension type. Return a pointer to the entry on success,

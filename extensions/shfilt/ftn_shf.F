@@ -479,25 +479,28 @@ c.......................................................................
 
 *     Initialize output to zero
 *     -------------------------
-      do 100 n = 1, ntrunc
+      do n = 1, ntrunc
          spectra(n) = 0.
-         do 100 m = 1, mtrunc
+         do m = 1, mtrunc
             power(m,n) = 0.
- 100  continue
+         enddo
+      enddo
 
 *     Compute power in terms of wavenumbers
 *     -------------------------------------
-      do 20 m = 1, mtrunc
-         do 20 n = m, ntrunc
+      do m = 1, mtrunc
+         do n = m, ntrunc
             power(m,n)=((even(m,n)**2+odd(m,n)**2)/4.)
- 20   continue
+         enddo
+      enddo
 
 *     Power as function of total wavenumber
 *     -------------------------------------
-      do 800 m = 1, mtrunc
-         do 800 n = m, ntrunc
+      do m = 1, mtrunc
+         do n = m, ntrunc
             spectra(n) = spectra(n) + power(m,n)
- 800  continue
+         enddo
+      enddo
 
 *     Return power at x=1
 *     -------------------

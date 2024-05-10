@@ -63,8 +63,8 @@ ifeq ($(HAS_CC),no)
       $(error Cannot proceed without a C compiler )
 endif
 
-override CFLAGS   += -O -fno-common -fPIC 
-override CPPFLAGS += -D___GAUDX___ -I. -I$(GAINC)
+override CFLAGS   += -O -fno-common -fPIC
+override CPPFLAGS += -D___GAUDX___ -I. -I$(GAINC) 
 
 # C compiler library
 # ------------------
@@ -159,7 +159,7 @@ endif
 #                          --------------
 
 LD := $(CC)
-override LDFLAGS += -shared 
+override LDFLAGS := -shared 
 DLLEXT:=so
 
 LIBS += $(CLIBS) $(FLIBS) 
@@ -297,7 +297,7 @@ clean distclean:
 	cpp -ansi -DPOD $*.c | pod2wiki --style mediawiki > $*.wiki
 
 %.gex : %.o $(EXTRAS)
-	$(LD) -o $@ $*.o $(EXTRAS) $(LIBS) $(LDFLAGS)
+	$(LD) $(LDFLAGS) -o $@ $*.o $(EXTRAS) $(LIBS)
 
 %.x : %.o
 	$(FC) $(FFLAGS) -o $@ $*.f

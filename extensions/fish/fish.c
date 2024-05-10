@@ -57,6 +57,7 @@ CPAN), there are targets in the gex.mk fragment for these:
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
 #include "grads.h"
 
 static int Init = 0; /* whether initialized */

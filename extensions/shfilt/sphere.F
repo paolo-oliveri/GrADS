@@ -343,24 +343,29 @@ c
       imm1 = imid
       if(modl .ne. 0) imm1 = imid-1
       if(isym .ne. 0) go to 15
-      do 5 k=1,nt
-      do 5 i=1,imm1
-      do 5 j=1,nlon
+      do k=1,nt
+      do i=1,imm1
+      do j=1,nlon
       ge(i,j,k) = tsn*(g(i,j,k)+g(nlp1-i,j,k))
       go(i,j,k) = tsn*(g(i,j,k)-g(nlp1-i,j,k))
-    5 continue
+      enddo
+      enddo
+      enddo
       go to 30
-   15 do 20 k=1,nt
-      do 20 i=1,imm1
-      do 20 j=1,nlon
+   15 do k=1,nt
+      do i=1,imm1
+      do j=1,nlon
       ge(i,j,k) = fsn*g(i,j,k)
-   20 continue
+      enddo
+      enddo
+      enddo
       if(isym .eq. 1) go to 27
    30 if(modl .eq. 0) go to 27
-      do 25 k=1,nt
-      do 25 j=1,nlon
+      do k=1,nt
+      do j=1,nlon
       ge(imid,j,k) = tsn*g(imid,j,k)
-   25 continue
+      enddo
+      enddo
    27 do 35 k=1,nt
       call hrfftf(ls,nlon,ge(1,1,k),ls,whrfft,work)
       if(mod(nlon,2) .ne. 0) go to 35
@@ -368,64 +373,80 @@ c
       ge(i,nlon,k) = .5*ge(i,nlon,k)
    36 continue
    35 continue
-      do 40 k=1,nt
-      do 40 mp1=1,mmax
-      do 40 np1=mp1,nlat
+      do k=1,nt
+      do mp1=1,mmax
+      do np1=mp1,nlat
       a(mp1,np1,k) = 0.
       b(mp1,np1,k) = 0.
-   40 continue
+      enddo
+      enddo
+      enddo
       if(isym .eq. 1) go to 145
       call zfin (2,nlat,nlon,0,zb,i3,wzfin)
-      do 110 k=1,nt
-      do 110 i=1,imid
-      do 110 np1=1,nlat,2
+      do k=1,nt
+      do i=1,imid
+      do np1=1,nlat,2
       a(1,np1,k) = a(1,np1,k)+zb(i,np1,i3)*ge(i,1,k)
-  110 continue
+      enddo
+      enddo
+      enddo
       ndo = nlat
       if(mod(nlat,2) .eq. 0) ndo = nlat-1
-      do 120 mp1=2,mdo
+      do mp1=2,mdo
       m = mp1-1
       call zfin (2,nlat,nlon,m,zb,i3,wzfin)
-      do 120 k=1,nt
-      do 120 i=1,imid
-      do 120 np1=mp1,ndo,2
+      do k=1,nt
+      do i=1,imid
+      do np1=mp1,ndo,2
       a(mp1,np1,k) = a(mp1,np1,k)+zb(i,np1,i3)*ge(i,2*mp1-2,k)
       b(mp1,np1,k) = b(mp1,np1,k)+zb(i,np1,i3)*ge(i,2*mp1-1,k)
-  120 continue
+      enddo
+      enddo
+      enddo
+      enddo
       if(mdo .eq. mmax .or. mmax .gt. ndo) go to 135
       call zfin (2,nlat,nlon,mdo,zb,i3,wzfin)
-      do 130 k=1,nt
-      do 130 i=1,imid
-      do 130 np1=mmax,ndo,2
+      do k=1,nt
+      do i=1,imid
+      do np1=mmax,ndo,2
       a(mmax,np1,k) = a(mmax,np1,k)+zb(i,np1,i3)*ge(i,2*mmax-2,k)
-  130 continue
+      enddo
+      enddo
+      enddo
   135 if(isym .eq. 2) return
   145 call zfin (1,nlat,nlon,0,zb,i3,wzfin)
-      do 150 k=1,nt
-      do 150 i=1,imm1
-      do 150 np1=2,nlat,2
+      do k=1,nt
+      do i=1,imm1
+      do np1=2,nlat,2
       a(1,np1,k) = a(1,np1,k)+zb(i,np1,i3)*go(i,1,k)
-  150 continue
+      enddo
+      enddo
+      enddo
       ndo = nlat
       if(mod(nlat,2) .ne. 0) ndo = nlat-1
-      do 160 mp1=2,mdo
+      do mp1=2,mdo
       m = mp1-1
       mp2 = mp1+1
       call zfin (1,nlat,nlon,m,zb,i3,wzfin)
-      do 160 k=1,nt
-      do 160 i=1,imm1
-      do 160 np1=mp2,ndo,2
+      do k=1,nt
+      do i=1,imm1
+      do np1=mp2,ndo,2
       a(mp1,np1,k) = a(mp1,np1,k)+zb(i,np1,i3)*go(i,2*mp1-2,k)
       b(mp1,np1,k) = b(mp1,np1,k)+zb(i,np1,i3)*go(i,2*mp1-1,k)
-  160 continue
+      enddo
+      enddo
+      enddo
+      enddo
       mp2 = mmax+1
       if(mdo .eq. mmax .or. mp2 .gt. ndo) return
       call zfin (1,nlat,nlon,mdo,zb,i3,wzfin)
-      do 170 k=1,nt
-      do 170 i=1,imm1
-      do 170 np1=mp2,ndo,2
+      do k=1,nt
+      do i=1,imm1
+      do np1=mp2,ndo,2
       a(mmax,np1,k) = a(mmax,np1,k)+zb(i,np1,i3)*go(i,2*mmax-2,k)
-  170 continue
+      enddo
+      enddo
+      enddo
       return
       end
 
@@ -805,24 +826,29 @@ c ****************************************************************
       imm1 = imid
       if(modl .ne. 0) imm1 = imid-1
       if(isym .ne. 0) go to 15
-      do 5 k=1,nt
-      do 5 i=1,imm1
-      do 5 j=1,nlon
+      do k=1,nt
+      do i=1,imm1
+      do j=1,nlon
       ge(i,j,k) = tsn*(g(i,j,k)+g(nlp1-i,j,k))
       go(i,j,k) = tsn*(g(i,j,k)-g(nlp1-i,j,k))
-    5 continue
+      enddo
+      enddo
+      enddo
       go to 30
-   15 do 20 k=1,nt
-      do 20 i=1,imm1
-      do 20 j=1,nlon
+   15 do k=1,nt
+      do i=1,imm1
+      do j=1,nlon
       ge(i,j,k) = fsn*g(i,j,k)
-   20 continue
+      enddo
+      enddo
+      enddo
       if(isym .eq. 1) go to 27
    30 if(modl .eq. 0) go to 27
-      do 25 k=1,nt
-      do 25 j=1,nlon
+      do k=1,nt
+      do j=1,nlon
       ge(imid,j,k) = tsn*g(imid,j,k)
-   25 continue
+      enddo
+      enddo
    27 do 35 k=1,nt
       call hrfftf(ls,nlon,ge(1,1,k),ls,whrfft,work)
       if(mod(nlon,2) .ne. 0) go to 35
@@ -830,62 +856,78 @@ c ****************************************************************
       ge(i,nlon,k) = .5*ge(i,nlon,k)
    36 continue
    35 continue
-      do 40 k=1,nt
-      do 40 mp1=1,mmax
-      do 40 np1=mp1,nlat
+      do k=1,nt
+      do mp1=1,mmax
+      do np1=mp1,nlat
       a(mp1,np1,k) = 0.
       b(mp1,np1,k) = 0.
-   40 continue
+      enddo
+      enddo
+      enddo
       if(isym .eq. 1) go to 145
-      do 110 k=1,nt
-      do 110 i=1,imid
-      do 110 np1=1,nlat,2
+      do k=1,nt
+      do i=1,imid
+      do np1=1,nlat,2
       a(1,np1,k) = a(1,np1,k)+z(np1,i)*ge(i,1,k)
-  110 continue
+      enddo
+      enddo
+      enddo
       ndo = nlat
       if(mod(nlat,2) .eq. 0) ndo = nlat-1
-      do 120 mp1=2,mdo
+      do mp1=2,mdo
       m = mp1-1
       mb = m*(nlat-1)-(m*(m-1))/2
-      do 120 k=1,nt
-      do 120 i=1,imid
-      do 120 np1=mp1,ndo,2
+      do k=1,nt
+      do i=1,imid
+      do np1=mp1,ndo,2
       a(mp1,np1,k) = a(mp1,np1,k)+z(np1+mb,i)*ge(i,2*mp1-2,k)
       b(mp1,np1,k) = b(mp1,np1,k)+z(np1+mb,i)*ge(i,2*mp1-1,k)
-  120 continue
+      enddo
+      enddo
+      enddo
+      enddo
       if(mdo .eq. mmax .or. mmax .gt. ndo) go to 135
       mb = mdo*(nlat-1)-(mdo*(mdo-1))/2
-      do 130 k=1,nt
-      do 130 i=1,imid
-      do 130 np1=mmax,ndo,2
+      do k=1,nt
+      do i=1,imid
+      do np1=mmax,ndo,2
       a(mmax,np1,k) = a(mmax,np1,k)+z(np1+mb,i)*ge(i,2*mmax-2,k)
-  130 continue
+      enddo
+      enddo
+      enddo
   135 if(isym .eq. 2) return
-  145 do 150 k=1,nt
-      do 150 i=1,imm1
-      do 150 np1=2,nlat,2
+  145 do k=1,nt
+      do i=1,imm1
+      do np1=2,nlat,2
       a(1,np1,k) = a(1,np1,k)+z(np1,i)*go(i,1,k)
-  150 continue
+      enddo
+      enddo
+      enddo
       ndo = nlat
       if(mod(nlat,2) .ne. 0) ndo = nlat-1
-      do 160 mp1=2,mdo
+      do mp1=2,mdo
       m = mp1-1
       mp2 = mp1+1
       mb = m*(nlat-1)-(m*(m-1))/2
-      do 160 k=1,nt
-      do 160 i=1,imm1
-      do 160 np1=mp2,ndo,2
+      do k=1,nt
+      do i=1,imm1
+      do np1=mp2,ndo,2
       a(mp1,np1,k) = a(mp1,np1,k)+z(np1+mb,i)*go(i,2*mp1-2,k)
       b(mp1,np1,k) = b(mp1,np1,k)+z(np1+mb,i)*go(i,2*mp1-1,k)
-  160 continue
+      enddo
+      enddo
+      enddo
+      enddo
       mp2 = mmax+1
       if(mdo .eq. mmax .or. mp2 .gt. ndo) return
       mb = mdo*(nlat-1)-(mdo*(mdo-1))/2
-      do 170 k=1,nt
-      do 170 i=1,imm1
-      do 170 np1=mp2,ndo,2
+      do k=1,nt
+      do i=1,imm1
+      do np1=mp2,ndo,2
       a(mmax,np1,k) = a(mmax,np1,k)+z(np1+mb,i)*go(i,2*mmax-2,k)
-  170 continue
+      enddo
+      enddo
+      enddo
       return
       end
 
@@ -953,7 +995,9 @@ c
       cp(1) = 0.
       ma = iabs(m)
       if(ma .gt. n) return
-      if(n-1) 2,3,5
+      if(n-1 .lt. 0) goto 2
+      if(n-1 .eq. 0) goto 3
+      if(n-1 .gt. 0) goto 5
     2 cp(1) = dsqrt(2.d0)
       return
     3 if(ma .ne. 0) go to 4
@@ -1024,8 +1068,12 @@ c      t1 = 1.d0/t1
       sdt = dsin(theta+theta)
       nmod=mod(n,2)
       mmod=mod(m,2)
-      if(nmod)1,1,2
-1     if(mmod)3,3,4
+      if(nmod .le. 0) then
+         if(mmod .lt. 0) goto 3
+         if(mmod .eq. 0) goto 3
+         if(mmod .gt. 0) goto 4
+      endif
+      if(nmod .gt. 0) goto 2
 c
 c     n even, m even
 c
@@ -1057,7 +1105,11 @@ c     pb = pb+cp(k)*dsin(2*k*theta)
       cth = chh
   180 continue
       return
-2     if(mmod)13,13,14
+ 2    continue
+      if(nmod .lt. 0) goto 13
+      if(nmod .eq. 0) goto 13
+      if(nmod .gt. 0) goto 14
+      
 c
 c     n odd, m even
 c
@@ -1099,8 +1151,13 @@ c
       sdt = dsin(theta+theta)
       nmod=mod(n,2)
       mmod=mod(abs(m),2)
-      if(nmod)1,1,2
-1     if(mmod)3,3,4
+      if(nmod .le. 0) then
+         if(mmod .lt. 0) goto 3
+         if(mmod .eq. 0) goto 3
+         if(mmod .gt. 0) goto 4
+      endif
+      if(nmod .gt. 0) goto 2
+
 c
 c     n even, m even
 c
@@ -1132,7 +1189,11 @@ c     pb = pb+cp(k)*dsin(2*k*theta)
       cth = chh
   180 continue
       return
-2     if(mmod)13,13,14
+ 2    continue
+      if(nmod .lt. 0) goto 13
+      if(nmod .eq. 0) goto 13
+      if(nmod .gt. 0) goto 14
+
 c
 c     n odd, m even
 c
@@ -1213,27 +1274,30 @@ c     only compute pmn for n-m even
 
 
       if (m.gt.1) then
-      do 100 np1=ms,nlat,ninc
+      do np1=ms,nlat,ninc
       n = np1-1
       imn = indx(m,n)
       if (n.ge.l) imn = imndx(m,n)
-      do 100 i=1,late
+      do i=1,late
       pmn(np1,i,km0) = abel(imn)*pmn(n-1,i,km2)
      1            +bbel(imn)*pmn(n-1,i,km0)
      2            -cbel(imn)*pmn(np1,i,km2)
-  100 continue
+      enddo
+      enddo
 
       else if (m.eq.0) then
-      do 101 np1=ms,nlat,ninc
-      do 101 i=1,late
+      do np1=ms,nlat,ninc
+      do i=1,late
       pmn(np1,i,km0) = p0n(np1,i)
-  101 continue
-
+      enddo
+      enddo
+      
       else if (m.eq.1) then
-      do 102 np1=ms,nlat,ninc
-      do 102 i=1,late
+      do np1=ms,nlat,ninc
+      do i=1,late
       pmn(np1,i,km0) = p1n(np1,i)
-  102 continue
+      enddo
+      enddo
       end if
 
 c     permute column indices
@@ -1273,19 +1337,24 @@ c
       i1 = i2
       i2 = i3
       i3 = ihold
-      if(m-1)25,30,35
+      if(m-1 .lt. 0) goto 25
+      if(m-1 .eq. 0) goto 30
+      if(m-1 .gt. 0) goto 35
+
    25 i1 = 1
       i2 = 2
       i3 = 3
-      do 45 np1=1,nlat
-      do 45 i=1,imid
+      do np1=1,nlat
+      do i=1,imid
       z(i,np1,i3) = zz(i,np1)
-   45 continue
+      enddo
+      enddo
       return
-   30 do 50 np1=2,nlat
-      do 50 i=1,imid
+   30 do np1=2,nlat
+      do i=1,imid
       z(i,np1,i3) = z1(i,np1)
-   50 continue
+      enddo
+      enddo
       return
    35 ns = ((m-2)*(nlat+nlat-m-1))/2+1
       if(isym .eq. 1) go to 36
@@ -1303,12 +1372,13 @@ c
       if(nstrt .gt. nlat) go to 80
       nstp = 2
       if(isym .eq. 0) nstp = 1
-      do 75 np1=nstrt,nlat,nstp
+      do np1=nstrt,nlat,nstp
       ns = ns+nstp
-      do 75 i=1,imid
+      do i=1,imid
       z(i,np1,i3) = a(ns)*z(i,np1-2,i1)+b(ns)*z(i,np1-2,i3)
      1                              -c(ns)*z(i,np1,i1)
-   75 continue
+      enddo
+      enddo
    80 return
       end
       subroutine zfinit (nlat,nlon,wzfin,dwork)
@@ -1334,9 +1404,9 @@ c
       double precision pi,dt,th,zh,cz(*),work(*)
       pi = 4.*datan(1.d0)
       dt = pi/(nlat-1)
-      do 160 mp1=1,2
+      do mp1=1,2
       m = mp1-1
-      do 160 np1=mp1,nlat
+      do np1=mp1,nlat
       n = np1-1
       call dnzfk(nlat,m,n,cz,work)
       do 165 i=1,imid
@@ -1345,7 +1415,8 @@ c
       z(i,np1,mp1) = zh
   165 continue
       z(1,np1,mp1) = .5*z(1,np1,mp1)
-  160 continue
+      enddo
+      enddo
       call rabcp(nlat,nlon,abc)
       return
       end
@@ -1365,9 +1436,14 @@ c
       call dnlfk(m,n,work)
       nmod = mod(n,2)
       mmod = mod(m,2)
-      if(nmod)1,1,2
-1     if(mmod)3,3,4
-c
+      if(nmod .le. 0) then
+         if(mmod .lt. 0) goto 3
+         if(mmod .eq. 0) goto 3
+         if(mmod .gt. 0) goto 4
+      endif
+      if(nmod .gt. 0) goto 2
+
+c     
 c     n even, m even
 c
 3     kdo = n/2+1
@@ -1399,7 +1475,11 @@ c
       cz(idx) = sc1*sum
 9     continue
       return
-2     if(mmod)13,13,14
+ 2    continue
+      if(mmod .lt. 0) goto 13
+      if(mmod .eq. 0) goto 13
+      if(mmod .gt. 0) goto 14
+
 c
 c     n odd, m even
 c
@@ -1440,13 +1520,22 @@ c
       lmod = mod(nlat,2)
       mmod = mod(m,2)
       nmod = mod(n,2)
-      if(lmod)20,20,10
+      
+      if(lmod .lt. 0) goto 20
+      if(lmod .eq. 0) goto 20
+      if(lmod .gt. 0) goto 10
+
    10 lc = (nlat+1)/2
       lq = lc-1
       ls = lc-2
-      if(nmod)1,1,2
-    1 if(mmod)3,3,4
-c
+      if(nmod .le. 0) then
+         if(mmod .lt. 0) goto 3
+         if(mmod .eq. 0) goto 3
+         if(mmod .gt. 0) goto 4
+      endif
+      if(nmod .gt. 0) goto 2
+
+c     
 c     nlat odd n even m even
 c
     3 zh = .5*(cz(1)+cz(lc)*dcos(2*lq*th))
@@ -1476,7 +1565,11 @@ c     zh = zh+cz(k+1)*dsin(2*k*th)
 c
 c     nlat odd n odd, m even
 c
-    2 if(mmod)5,5,6
+ 2    continue
+      if(mmod .lt. 0) goto 5
+      if(mmod .eq. 0) goto 5
+      if(mmod .gt. 0) goto 6
+
     5 cth = dcos(th)
       sth = dsin(th)
       do 203 k=1,lq
@@ -1502,8 +1595,13 @@ c     zh = zh+cz(k+1)*dsin((2*k-1)*th)
       return
    20 lc = nlat/2
       lq = lc-1
-      if(nmod)30,30,80
-   30 if(mmod)40,40,60
+      if(nmod .le. 0) then
+         if(mmod .lt. 0) goto 40
+         if(mmod .eq. 0) goto 40
+         if(mmod .gt. 0) goto 60
+      endif
+      if(nmod .gt. 0) goto 80
+
 c
 c     nlat even n even m even
 c
@@ -1534,7 +1632,11 @@ c     zh = zh+cz(k+1)*dsin(2*k*th)
 c
 c     nlat even n odd m even
 c
-   80 if(mmod)90,90,110
+ 80   continue
+      if(mmod .lt. 0) goto 90
+      if(mmod .eq. 0) goto 90
+      if(mmod .gt. 0) goto 110
+
    90 zh = .5*cz(lc)*dcos((nlat-1)*th)
       cth = dcos(th)
       sth = dsin(th)
@@ -1585,19 +1687,23 @@ c
       i1 = i2
       i2 = i3
       i3 = ihold
-      if(m-1)25,30,35
+      if(m-1 .lt. 0) goto 25
+      if(m-1 .eq. 0) goto 30
+      if(m-1 .gt. 0) goto 35
    25 i1 = 1
       i2 = 2
       i3 = 3
-      do 45 np1=1,nlat
-      do 45 i=1,imid
+      do np1=1,nlat
+      do i=1,imid
       p(i,np1,i3) = pz(i,np1)
-   45 continue
+      enddo
+      enddo
       return
-   30 do 50 np1=2,nlat
-      do 50 i=1,imid
+   30 do np1=2,nlat
+      do i=1,imid
       p(i,np1,i3) = p1(i,np1)
-   50 continue
+      enddo
+      enddo
       return
    35 ns = ((m-2)*(nlat+nlat-m-1))/2+1
       if(isym .eq. 1) go to 36
@@ -1615,12 +1721,13 @@ c
       if(nstrt .gt. nlat) go to 80
       nstp = 2
       if(isym .eq. 0) nstp = 1
-      do 75 np1=nstrt,nlat,nstp
+      do np1=nstrt,nlat,nstp
       ns = ns+nstp
-      do 75 i=1,imid
+      do i=1,imid
       p(i,np1,i3) = a(ns)*p(i,np1-2,i1)+b(ns)*p(i,np1-2,i3)
      1                              -c(ns)*p(i,np1,i1)
-   75 continue
+      enddo
+      enddo
    80 return
       end
       subroutine alinit (nlat,nlon,walin,dwork)
@@ -1640,16 +1747,18 @@ c
       double precision pi,dt,th,cp,ph
       pi = 4.*datan(1.d0)
       dt = pi/(nlat-1)
-      do 160 mp1=1,2
+      do mp1=1,2
       m = mp1-1
-      do 160 np1=mp1,nlat
+      do np1=mp1,nlat
       n = np1-1
       call dnlfk (m,n,cp)
-      do 160 i=1,imid
+      do i=1,imid
       th = (i-1)*dt
       call dnlft (m,n,th,cp,ph)
       p(i,np1,mp1) = ph
-  160 continue
+      enddo
+      enddo
+      enddo
       call rabcp(nlat,nlon,abc)
       return
       end
@@ -1710,14 +1819,16 @@ c
       double precision dwork(*)
       call zfinit(nlat,nlon,wzfin,dwork)
       mmax = min0(nlat,nlon/2+1)
-      do 33 mp1=1,mmax
+      do mp1=1,mmax
       m = mp1-1
       call zfin (0,nlat,nlon,m,zin,i3,wzfin)
-      do 33 np1=mp1,nlat
+      do np1=mp1,nlat
       mn = m*(nlat-1)-(m*(m-1))/2+np1
-      do 33 i=1,imid
+      do i=1,imid
       z(mn,i) = zin(i,np1,i3)
-   33 continue
+      enddo
+      enddo
+      enddo
       return
       end
       subroutine ses1(nlat,nlon,imid,p,pin,walin,dwork)
@@ -1725,14 +1836,16 @@ c
       double precision dwork(*)
       call alinit (nlat,nlon,walin,dwork)
       mmax = min0(nlat,nlon/2+1)
-      do 10 mp1=1,mmax
+      do mp1=1,mmax
       m = mp1-1
       call alin(0,nlat,nlon,m,pin,i3,walin)
-      do 10 np1=mp1,nlat
+      do np1=mp1,nlat
       mn = m*(nlat-1)-(m*(m-1))/2+np1
-      do 10 i=1,imid
+      do i=1,imid
       p(i,mn) = pin(i,np1,i3)
-   10 continue
+      enddo
+      enddo
+      enddo
       return
       end
       subroutine zvinit (nlat,nlon,wzvin,dwork)
@@ -1760,9 +1873,9 @@ c
       pi = 4.*datan(1.d0)
       dt = pi/(nlat-1)
       mdo = min0(2,nlat,(nlon+1)/2)
-      do 160 mp1=1,mdo
+      do mp1=1,mdo
       m = mp1-1
-      do 160 np1=mp1,nlat
+      do np1=mp1,nlat
       n = np1-1
       call dzvk(nlat,m,n,czv,work)
       do 165 i=1,imid
@@ -1771,7 +1884,8 @@ c
       zv(i,np1,mp1) = zvh
   165 continue
       zv(1,np1,mp1) = .5*zv(1,np1,mp1)
-  160 continue
+      enddo
+      enddo
       call rabcv(nlat,nlon,abc)
       return
       end
@@ -1800,9 +1914,9 @@ c
       dt = pi/(nlat-1)
       mdo = min0(3,nlat,(nlon+1)/2)
       if(mdo .lt. 2) return
-      do 160 mp1=2,mdo
+      do mp1=2,mdo
       m = mp1-1
-      do 160 np1=mp1,nlat
+      do np1=mp1,nlat
       n = np1-1
       call dzwk(nlat,m,n,czw,work)
       do 165 i=1,imid
@@ -1811,7 +1925,8 @@ c
       zw(i,np1,m) = zwh
   165 continue
       zw(1,np1,m) = .5*zw(1,np1,m)
-  160 continue
+      enddo
+      enddo
       call rabcw(nlat,nlon,abc)
       return
       end
@@ -1840,19 +1955,23 @@ c
       i1 = i2
       i2 = i3
       i3 = ihold
-      if(m-1)25,30,35
+      if(m-1 .lt. 0) goto 25
+      if(m-1 .eq. 0) goto 30
+      if(m-1 .gt. 0) goto 35
    25 i1 = 1
       i2 = 2
       i3 = 3
-      do 45 np1=1,nlat
-      do 45 i=1,imid
+      do np1=1,nlat
+      do i=1,imid
       zv(i,np1,i3) = zvz(i,np1)
-   45 continue
+      enddo
+      enddo
       return
-   30 do 50 np1=2,nlat
-      do 50 i=1,imid
+   30 do np1=2,nlat
+      do i=1,imid
       zv(i,np1,i3) = zv1(i,np1)
-   50 continue
+      enddo
+      enddo
       return
    35 ns = ((m-2)*(nlat+nlat-m-1))/2+1
       if(ityp .eq. 1) go to 36
@@ -1870,12 +1989,13 @@ c
       if(nstrt .gt. nlat) go to 80
       nstp = 2
       if(ityp .eq. 0) nstp = 1
-      do 75 np1=nstrt,nlat,nstp
+      do np1=nstrt,nlat,nstp
       ns = ns+nstp
-      do 75 i=1,imid
+      do i=1,imid
       zv(i,np1,i3) = a(ns)*zv(i,np1-2,i1)+b(ns)*zv(i,np1-2,i3)
      1                              -c(ns)*zv(i,np1,i1)
-   75 continue
+      enddo
+      enddo
    80 return
       end
       subroutine zwin (ityp,nlat,nlon,m,zw,i3,wzwin)
@@ -1903,19 +2023,23 @@ c
       i1 = i2
       i2 = i3
       i3 = ihold
-      if(m-2)25,30,35
+      if(m-2 .lt. 0) goto 25
+      if(m-2 .eq. 0) goto 30
+      if(m-2 .gt. 0) goto 35
    25 i1 = 1
       i2 = 2
       i3 = 3
-      do 45 np1=2,nlat
-      do 45 i=1,imid
+      do np1=2,nlat
+      do i=1,imid
       zw(i,np1,i3) = zw1(i,np1)
-   45 continue
+      enddo
+      enddo
       return
-   30 do 50 np1=3,nlat
-      do 50 i=1,imid
+   30 do np1=3,nlat
+      do i=1,imid
       zw(i,np1,i3) = zw2(i,np1)
-   50 continue
+      enddo
+      enddo
       return
    35 ns = ((m-2)*(nlat+nlat-m-1))/2+1
       if(ityp .eq. 1) go to 36
@@ -1933,12 +2057,13 @@ c
       if(nstrt .gt. nlat) go to 80
       nstp = 2
       if(ityp .eq. 0) nstp = 1
-      do 75 np1=nstrt,nlat,nstp
+      do np1=nstrt,nlat,nstp
       ns = ns+nstp
-      do 75 i=1,imid
+      do i=1,imid
       zw(i,np1,i3) = a(ns)*zw(i,np1-2,i1)+b(ns)*zw(i,np1-2,i3)
      1                              -c(ns)*zw(i,np1,i1)
-   75 continue
+      enddo
+      enddo
    80 return
       end
       subroutine vbinit (nlat,nlon,wvbin,dwork)
@@ -1965,9 +2090,9 @@ c
       pi = 4.*datan(1.d0)
       dt = pi/(nlat-1)
       mdo = min0(2,nlat,(nlon+1)/2)
-      do 160 mp1=1,mdo
+      do mp1=1,mdo
       m = mp1-1
-      do 160 np1=mp1,nlat
+      do np1=mp1,nlat
       n = np1-1
       call dvbk(m,n,cvb,work)
       do 165 i=1,imid
@@ -1975,7 +2100,8 @@ c
       call dvbt(m,n,th,cvb,vbh)
       vb(i,np1,mp1) = vbh
   165 continue
-  160 continue
+      enddo
+      enddo
       call rabcv(nlat,nlon,abc)
       return
       end
@@ -2004,9 +2130,9 @@ c
       dt = pi/(nlat-1)
       mdo = min0(3,nlat,(nlon+1)/2)
       if(mdo .lt. 2) return
-      do 160 mp1=2,mdo
+      do mp1=2,mdo
       m = mp1-1
-      do 160 np1=mp1,nlat
+      do np1=mp1,nlat
       n = np1-1
       call dwbk(m,n,cwb,work)
       do 165 i=1,imid
@@ -2014,7 +2140,8 @@ c
       call dwbt(m,n,th,cwb,wbh)
       wb(i,np1,m) = wbh
   165 continue
-  160 continue
+      enddo
+      enddo
       call rabcw(nlat,nlon,abc)
       return
       end
@@ -2043,19 +2170,23 @@ c
       i1 = i2
       i2 = i3
       i3 = ihold
-      if(m-1)25,30,35
+      if(m-1 .lt. 0) goto 25
+      if(m-1 .eq. 0) goto 30
+      if(m-1 .gt. 0) goto 35
    25 i1 = 1
       i2 = 2
       i3 = 3
-      do 45 np1=1,nlat
-      do 45 i=1,imid
+      do np1=1,nlat
+      do i=1,imid
       vb(i,np1,i3) = vbz(i,np1)
-   45 continue
+      enddo
+      enddo
       return
-   30 do 50 np1=2,nlat
-      do 50 i=1,imid
+   30 do np1=2,nlat
+      do i=1,imid
       vb(i,np1,i3) = vb1(i,np1)
-   50 continue
+      enddo
+      enddo
       return
    35 ns = ((m-2)*(nlat+nlat-m-1))/2+1
       if(ityp .eq. 1) go to 36
@@ -2073,12 +2204,13 @@ c
       if(nstrt .gt. nlat) go to 80
       nstp = 2
       if(ityp .eq. 0) nstp = 1
-      do 75 np1=nstrt,nlat,nstp
+      do np1=nstrt,nlat,nstp
       ns = ns+nstp
-      do 75 i=1,imid
+      do i=1,imid
       vb(i,np1,i3) = a(ns)*vb(i,np1-2,i1)+b(ns)*vb(i,np1-2,i3)
      1                              -c(ns)*vb(i,np1,i1)
-   75 continue
+      enddo
+      enddo
    80 return
       end
       subroutine wbin (ityp,nlat,nlon,m,wb,i3,wwbin)
@@ -2106,19 +2238,23 @@ c
       i1 = i2
       i2 = i3
       i3 = ihold
-      if(m-2)25,30,35
+      if(m-2 .lt. 0) goto 25
+      if(m-2 .eq. 0) goto 30
+      if(m-2 .gt. 0) goto 35
    25 i1 = 1
       i2 = 2
       i3 = 3
-      do 45 np1=2,nlat
-      do 45 i=1,imid
+      do np1=2,nlat
+      do i=1,imid
       wb(i,np1,i3) = wb1(i,np1)
-   45 continue
+      enddo
+      enddo
       return
-   30 do 50 np1=3,nlat
-      do 50 i=1,imid
+   30 do np1=3,nlat
+      do i=1,imid
       wb(i,np1,i3) = wb2(i,np1)
-   50 continue
+      enddo
+      enddo
       return
    35 ns = ((m-2)*(nlat+nlat-m-1))/2+1
       if(ityp .eq. 1) go to 36
@@ -2136,12 +2272,13 @@ c
       if(nstrt .gt. nlat) go to 80
       nstp = 2
       if(ityp .eq. 0) nstp = 1
-      do 75 np1=nstrt,nlat,nstp
+      do np1=nstrt,nlat,nstp
       ns = ns+nstp
-      do 75 i=1,imid
+      do i=1,imid
       wb(i,np1,i3) = a(ns)*wb(i,np1-2,i1)+b(ns)*wb(i,np1-2,i3)
      1                              -c(ns)*wb(i,np1,i1)
-   75 continue
+      enddo
+      enddo
    80 return
       end
        subroutine dzvk(nlat,m,n,czv,work)
@@ -2956,9 +3093,9 @@ c
       pi = 4.*datan(1.d0)
       dt = pi/(nlat-1)
       mdo = min0(2,nlat,(nlon+1)/2)
-      do 160 mp1=1,mdo
+      do mp1=1,mdo
       m = mp1-1
-      do 160 np1=mp1,nlat
+      do np1=mp1,nlat
       n = np1-1
       call dvtk(m,n,cvb,work)
       do 165 i=1,imid
@@ -2966,7 +3103,8 @@ c
       call dvtt(m,n,th,cvb,vbh)
       vb(i,np1,mp1) = vbh
   165 continue
-  160 continue
+      enddo
+      enddo
       call rabcv(nlat,nlon,abc)
       return
       end
@@ -2995,9 +3133,9 @@ c
       dt = pi/(nlat-1)
       mdo = min0(3,nlat,(nlon+1)/2)
       if(mdo .lt. 2) return
-      do 160 mp1=2,mdo
+      do mp1=2,mdo
       m = mp1-1
-      do 160 np1=mp1,nlat
+      do np1=mp1,nlat
       n = np1-1
       call dwtk(m,n,cwb,work)
       do 165 i=1,imid
@@ -3005,7 +3143,8 @@ c
       call dwtt(m,n,th,cwb,wbh)
       wb(i,np1,m) = wbh
   165 continue
-  160 continue
+      enddo
+      enddo
       call rabcw(nlat,nlon,abc)
       return
       end
@@ -3033,16 +3172,17 @@ c
       dimension vb(imid,nlat,2),abc(*)
       double precision theta(*),cvb(*),work(*),vbh
       mdo = min0(2,nlat,(nlon+1)/2)
-      do 160 mp1=1,mdo
+      do mp1=1,mdo
       m = mp1-1
-      do 160 np1=mp1,nlat
+      do np1=mp1,nlat
       n = np1-1
       call dvtk(m,n,cvb,work)
       do 165 i=1,imid
       call dvtt(m,n,theta(i),cvb,vbh)
       vb(i,np1,mp1) = vbh
   165 continue
-  160 continue
+      enddo
+      enddo
       call rabcv(nlat,nlon,abc)
       return
       end
@@ -3070,16 +3210,17 @@ c
       double precision theta(*), cwb(*), work(*), wbh
       mdo = min0(3,nlat,(nlon+1)/2)
       if(mdo .lt. 2) return
-      do 160 mp1=2,mdo
+      do mp1=2,mdo
       m = mp1-1
-      do 160 np1=mp1,nlat
+      do np1=mp1,nlat
       n = np1-1
       call dwtk(m,n,cwb,work)
       do 165 i=1,imid
       call dwtt(m,n,theta(i),cwb,wbh)
       wb(i,np1,m) = wbh
   165 continue
-  160 continue
+      enddo
+      enddo
       call rabcw(nlat,nlon,abc)
       return
       end
@@ -3162,8 +3303,10 @@ c
 c     n even m odd
 c
    20 cw(l) = cf*work(l)
-   25 l = l-1
-      if(l) 50,27,26
+ 25   l = l-1
+      if(l .lt. 0) goto 50
+      if(l .eq. 0) goto 27
+      if(l .gt. 0) goto 26
    26 cw(l) = cw(l+1)+cf*work(l)
    27 cw(l+1) = -(l+l+1)*cw(l+1)
       go to 25
@@ -3174,8 +3317,10 @@ c
 c     n odd m even
 c
       cw(l) = -cf*work(l+1)
-   35 l = l-1
-      if(l) 50,37,36
+ 35   l = l-1
+      if(l .lt. 0) goto 50
+      if(l .eq. 0) goto 37
+      if(l .gt. 0) goto 36
    36 cw(l) = cw(l+1)-cf*work(l+1)
    37 cw(l+1) = (l+l+2)*cw(l+1)
       go to 35
@@ -3184,8 +3329,10 @@ c     n odd m odd
 c
    40 l = (n+1)/2
       cw(l) = cf*work(l)
-   45 l = l-1
-      if(l) 50,47,46
+ 45   l = l-1
+      if(l .lt. 0) goto 50
+      if(l .eq. 0) goto 47
+      if(l .gt. 0) goto 46
    46 cw(l) = cw(l+1)+cf*work(l)
    47 cw(l+1) = -(l+l)*cw(l+1)
       go to 45
@@ -3339,16 +3486,17 @@ c
       dimension vb(imid,nlat,2),abc(*)
       double precision cvb(*),theta(*),vbh,work(*)
       mdo = min0(2,nlat,(nlon+1)/2)
-      do 160 mp1=1,mdo
+      do mp1=1,mdo
       m = mp1-1
-      do 160 np1=mp1,nlat
+      do np1=mp1,nlat
       n = np1-1
       call dvbk(m,n,cvb,work)
       do 165 i=1,imid
       call dvbt(m,n,theta(i),cvb,vbh)
       vb(i,np1,mp1) = vbh
   165 continue
-  160 continue
+      enddo
+      enddo
       call rabcv(nlat,nlon,abc)
       return
       end
@@ -3376,16 +3524,17 @@ c
       double precision cwb(*),theta(*),wbh,work(*)
       mdo = min0(3,nlat,(nlon+1)/2)
       if(mdo .lt. 2) return
-      do 160 mp1=2,mdo
+      do mp1=2,mdo
       m = mp1-1
-      do 160 np1=mp1,nlat
+      do np1=mp1,nlat
       n = np1-1
       call dwbk(m,n,cwb,work)
       do 165 i=1,imid
       call dwbt(m,n,theta(i),cwb,wbh)
       wb(i,np1,m) = wbh
   165 continue
-  160 continue
+      enddo
+      enddo
       call rabcw(nlat,nlon,abc)
       return
       end
@@ -3596,14 +3745,18 @@ c
       nl = n                                                                   
       nf = 0           
       j = 0            
-  101 j = j+1          
-      if (j-4) 102,102,103                
+ 101  j = j+1
+      if(j-4 .lt. 0) goto 102
+      if(j-4 .eq. 0) goto 102
+      if(j-4 .gt. 0) goto 103
   102 ntry = ntryh(j)                     
       go to 104        
   103 ntry = ntry+2    
   104 nq = nl/ntry     
-      nr = nl-ntry*nq                     
-      if (nr) 101,105,101                 
+      nr = nl-ntry*nq
+      if(nr .lt. 0) goto 101
+      if(nr .eq. 0) goto 105
+      if(nr .gt. 0) goto 101
   105 nf = nf+1        
       fac(nf+2) = ntry                    
       nl = nq          
@@ -3716,10 +3869,11 @@ c
   110    l2 = l1       
   111 continue         
       if (na .eq. 1) return
-      do 112 j=1,n     
-      do 112 i=1,m     
+      do j=1,n     
+      do i=1,m     
 	 c(i,j) = ch(i,j)
-  112 continue         
+      enddo
+      enddo
       return           
       end              
       subroutine hradf4 (mp,ido,l1,cc,mdimcc,ch,mdimch,wa1,wa2,wa3)
@@ -3738,8 +3892,10 @@ c
          ch(m,ido,2,k) = cc(m,1,k,1)-cc(m,1,k,3)             
          ch(m,1,3,k) = cc(m,1,k,4)-cc(m,1,k,2)               
  1001    continue      
-  101 continue         
-      if (ido-2) 107,105,102              
+ 101  continue
+      if(ido-2 .lt. 0) goto 107
+      if(ido-2 .eq. 0) goto 105
+      if(ido-2 .gt. 0) goto 102
   102 idp2 = ido+2     
       do 104 k=1,l1    
          do 103 i=3,ido,2                 
@@ -3807,8 +3963,10 @@ c
          ch(m,1,1,k) = cc(m,1,k,1)+cc(m,1,k,2)               
          ch(m,ido,2,k) = cc(m,1,k,1)-cc(m,1,k,2)             
  1001    continue      
-  101 continue         
-      if (ido-2) 107,105,102              
+ 101  continue
+      if(ido-2 .lt. 0) goto 107
+      if(ido-2 .eq. 0) goto 105
+      if(ido-2 .gt. 0) goto 102
   102 idp2 = ido+2     
       do 104 k=1,l1    
          do 103 i=3,ido,2                 
@@ -4285,10 +4443,11 @@ c
          iw = iw+(ip-1)*ido               
   116 continue         
       if (na .eq. 0) return
-      do 117 j=1,n     
-      do 117 i=1,m     
+      do j=1,n     
+      do i=1,m     
 	 c(i,j) = ch(i,j)
-  117 continue         
+      enddo
+      enddo
       return           
       end              
       subroutine hradbg (mp,ido,ip,l1,idl1,cc,c1,c2,mdimcc,
@@ -4507,8 +4666,10 @@ c
          ch(m,1,k,2) = (cc(m,1,1,k)-cc(m,ido,4,k))           
      1   -(cc(m,1,3,k)+cc(m,1,3,k))       
  1001     continue     
-  101 continue         
-      if (ido-2) 107,105,102              
+ 101   continue
+      if(ido-2 .lt. 0) goto 107
+      if(ido-2 .eq. 0) goto 105
+      if(ido-2 .gt. 0) goto 102
   102 idp2 = ido+2     
       do 104 k=1,l1    
          do 103 i=3,ido,2                 
@@ -4567,8 +4728,10 @@ c
          ch(m,1,k,1) = cc(m,1,1,k)+cc(m,ido,2,k)             
          ch(m,1,k,2) = cc(m,1,1,k)-cc(m,ido,2,k)             
  1001     continue     
-  101 continue         
-      if (ido-2) 107,105,102              
+ 101   continue
+      if(ido-2 .lt. 0) goto 107
+      if(ido-2 .eq. 0) goto 105
+      if(ido-2 .gt. 0) goto 102
   102 idp2 = ido+2     
       do 104 k=1,l1    
          do 103 i=3,ido,2                 
@@ -5076,63 +5239,79 @@ c
       modl = mod(nlat,2)
       imm1 = imid
       if(modl .ne. 0) imm1 = imid-1
-      do 80 k=1,nt
-      do 80 j=1,nlon
-      do 80 i=1,ls
+      do k=1,nt
+      do j=1,nlon
+      do i=1,ls
       ge(i,j,k)=0.
-   80 continue
+      enddo
+      enddo
+      enddo
       if(isym .eq. 1) go to 125
       call alin (2,nlat,nlon,0,pb,i3,walin)
-      do 100 k=1,nt
-      do 100 np1=1,nlat,2
-      do 100 i=1,imid
+      do k=1,nt
+      do np1=1,nlat,2
+      do i=1,imid
       ge(i,1,k)=ge(i,1,k)+a(1,np1,k)*pb(i,np1,i3)
-  100 continue
+      enddo
+      enddo
+      enddo
       ndo = nlat
       if(mod(nlat,2) .eq. 0) ndo = nlat-1
-      do 110 mp1=2,mdo
+      do mp1=2,mdo
       m = mp1-1
       call alin (2,nlat,nlon,m,pb,i3,walin)
-      do 110 np1=mp1,ndo,2
-      do 110 k=1,nt
-      do 110 i=1,imid
+      do np1=mp1,ndo,2
+      do k=1,nt
+      do i=1,imid
       ge(i,2*mp1-2,k) = ge(i,2*mp1-2,k)+a(mp1,np1,k)*pb(i,np1,i3)
       ge(i,2*mp1-1,k) = ge(i,2*mp1-1,k)+b(mp1,np1,k)*pb(i,np1,i3)
-  110 continue
+      enddo
+      enddo
+      enddo
+      enddo
       if(mdo .eq. mmax .or. mmax .gt. ndo) go to 122
       call alin (2,nlat,nlon,mdo,pb,i3,walin)
-      do 120 np1=mmax,ndo,2
-      do 120 k=1,nt
-      do 120 i=1,imid
+      do np1=mmax,ndo,2
+      do k=1,nt
+      do i=1,imid
       ge(i,2*mmax-2,k) = ge(i,2*mmax-2,k)+a(mmax,np1,k)*pb(i,np1,i3)
-  120 continue
+      enddo
+      enddo
+      enddo
   122 if(isym .eq. 2) go to 155
   125 call alin(1,nlat,nlon,0,pb,i3,walin)
-      do 140 k=1,nt
-      do 140 np1=2,nlat,2
-      do 140 i=1,imm1
+      do k=1,nt
+      do np1=2,nlat,2
+      do i=1,imm1
       go(i,1,k)=go(i,1,k)+a(1,np1,k)*pb(i,np1,i3)
-  140 continue
+      enddo
+      enddo
+      enddo
       ndo = nlat
       if(mod(nlat,2) .ne. 0) ndo = nlat-1
-      do 150 mp1=2,mdo
+      do mp1=2,mdo
       mp2 = mp1+1
       m = mp1-1
       call alin(1,nlat,nlon,m,pb,i3,walin)
-      do 150 np1=mp2,ndo,2
-      do 150 k=1,nt
-      do 150 i=1,imm1
+      do np1=mp2,ndo,2
+      do k=1,nt
+      do i=1,imm1
       go(i,2*mp1-2,k) = go(i,2*mp1-2,k)+a(mp1,np1,k)*pb(i,np1,i3)
       go(i,2*mp1-1,k) = go(i,2*mp1-1,k)+b(mp1,np1,k)*pb(i,np1,i3)
-  150 continue
+      enddo
+      enddo
+      enddo
+      enddo
       mp2 = mmax+1
       if(mdo .eq. mmax .or. mp2 .gt. ndo) go to 155
       call alin(1,nlat,nlon,mdo,pb,i3,walin)
-      do 152 np1=mp2,ndo,2
-      do 152 k=1,nt
-      do 152 i=1,imm1
+      do np1=mp2,ndo,2
+      do k=1,nt
+      do i=1,imm1
       go(i,2*mmax-2,k) = go(i,2*mmax-2,k)+a(mmax,np1,k)*pb(i,np1,i3)
-  152 continue
+      enddo
+      enddo
+      enddo
   155 do 160 k=1,nt
       if(mod(nlon,2) .ne. 0) go to 157
       do 156 i=1,ls
@@ -5141,21 +5320,25 @@ c
   157 call hrfftb(ls,nlon,ge(1,1,k),ls,whrfft,work)
   160 continue
       if(isym .ne. 0) go to 180
-      do 170 k=1,nt
-      do 170 j=1,nlon
+      do k=1,nt
+      do j=1,nlon
       do 175 i=1,imm1
       g(i,j,k) = .5*(ge(i,j,k)+go(i,j,k))
       g(nlp1-i,j,k) = .5*(ge(i,j,k)-go(i,j,k))
   175 continue
       if(modl .eq. 0) go to 170
       g(imid,j,k) = .5*ge(imid,j,k)
-  170 continue
+ 170  continue
+      enddo
+      enddo
       return
-  180 do 185 k=1,nt
-      do 185 i=1,imid
-      do 185 j=1,nlon
+  180 do k=1,nt
+      do i=1,imid
+      do j=1,nlon
       g(i,j,k) = .5*ge(i,j,k)
-  185 continue
+      enddo
+      enddo
+      enddo
       return
       end
 c     subroutine shseci(nlat,nlon,wshsec,lshsec,dwork,ldwork,ierror)
@@ -5903,22 +6086,26 @@ c     set pointers for internal storage of g and legendre polys
      1          b(mdab,ndab,nt),g(lat,nlon,nt)
       dimension w(*),wts(nlat),wfft(*),pmn(nlat,late,3)
 c     set gs array internally in shagc1
-      do 100 k=1,nt
-      do 100 j=1,nlon
-      do 100 i=1,lat
+      do k=1,nt
+      do j=1,nlon
+      do i=1,lat
       g(i,j,k) = gs(i,j,k)
-  100 continue
+      enddo
+      enddo
+      enddo
 c     do fourier transform
       do 101 k=1,nt
       call hrfftf(lat,nlon,g(1,1,k),lat,wfft,pmn)
   101 continue
 c     scale result
       sfn = 2.0/float(nlon)
-      do 102 k=1,nt
-      do 102 j=1,nlon
-      do 102 i=1,lat
-      g(i,j,k) = sfn*g(i,j,k)
-  102 continue
+      do k=1,nt
+      do j=1,nlon
+      do i=1,lat
+      g(i,j,k) = sfn*g(i,j,k)  
+      enddo
+      enddo
+      enddo
 c     compute using gaussian quadrature
 c     a(n,m) = s (ga(theta,m)*pnm(theta)*sin(theta)*dtheta)
 c     b(n,m) = s (gb(theta,m)*pnm(theta)*sin(theta)*dtheta)
@@ -5931,12 +6118,14 @@ c     ga(0),ga(1),gb(1),ga(2),gb(2),...,ga(k-1),gb(k-1),ga(k)
 c     correspond to (in the case nlon=l+l-2)
 c     g(i,1),g(i,2),g(i,3),g(i,4),g(i,5),...,g(i,2l-4),g(i,2l-3),g(i,2l-
 c     initialize coefficients to zero
-      do 103 k=1,nt
-      do 103 np1=1,nlat
-      do 103 mp1=1,l
+      do k=1,nt
+      do np1=1,nlat
+      do mp1=1,l
       a(mp1,np1,k) = 0.0
       b(mp1,np1,k) = 0.0
-  103 continue
+      enddo
+      enddo
+      enddo
 c     set m+1 limit on b(m+1) calculation
       lm1 = l
       if (nlon .eq. l+l-2) lm1 = l-1
@@ -5945,8 +6134,8 @@ c     for full sphere (mode=0) and even/odd reduction:
 c     overwrite g(i) with (g(i)+g(nlat-i+1))*wts(i)
 c     overwrite g(nlat-i+1) with (g(i)-g(nlat-i+1))*wts(i)
       nl2 = nlat/2
-      do 104 k=1,nt
-      do 104 j=1,nlon
+      do k=1,nt
+      do j=1,nlon
       do 105 i=1,nl2
       is = nlat-i+1
       t1 = g(i,j,k)
@@ -5956,12 +6145,13 @@ c     overwrite g(nlat-i+1) with (g(i)-g(nlat-i+1))*wts(i)
   105 continue
 c     adjust equator if necessary(nlat odd)
       if (mod(nlat,2).ne.0) g(late,j,k) = wts(late)*g(late,j,k)
-  104 continue
+      enddo
+      enddo
 c     set m = 0 coefficients first
       m = 0
       call legin(mode,l,nlat,m,w,pmn,km)
-      do 106 k=1,nt
-      do 106 i=1,late
+      do k=1,nt
+      do i=1,late
       is = nlat-i+1
       do 107 np1=1,nlat,2
 c     n even
@@ -5971,7 +6161,8 @@ c     n even
 c     n odd
       a(1,np1,k) = a(1,np1,k)+g(is,1,k)*pmn(np1,i,km)
   108 continue
-  106 continue
+      enddo
+      enddo
 c     compute coefficients for which b(m,n) is available
       do 109 mp1=2,lm1
       m = mp1-1
@@ -5998,8 +6189,8 @@ c     n-m odd
 c     compute a(l,np1) coefficients only
       m = l-1
       call legin(mode,l,nlat,m,w,pmn,km)
-      do 114 k=1,nt
-      do 114 i=1,late
+      do k=1,nt
+      do i=1,late
       is = nlat-i+1
 c     n-m even
       do 124 np1=l,nlat,2
@@ -6010,30 +6201,34 @@ c     n-m odd
       do 125 np1=lp1,nlat,2
       a(l,np1,k) = a(l,np1,k)+0.5*g(is,nlon,k)*pmn(np1,i,km)
   125 continue
-  114 continue
+      enddo
+      enddo
       end if
       else
 c     half sphere
 c     overwrite g(i) with wts(i)*(g(i)+g(i)) for i=1,...,nlate/2
       nl2 = nlat/2
-      do 116  k=1,nt
-      do 116 j=1,nlon
+      do k=1,nt
+      do j=1,nlon
       do 115 i=1,nl2
       g(i,j,k) = wts(i)*(g(i,j,k)+g(i,j,k))
   115 continue
 c     adjust equator separately if a grid point
       if (nl2.lt.late) g(late,j,k) = wts(late)*g(late,j,k)
-  116 continue
+      enddo
+      enddo
 c     set m = 0 coefficients first
       m = 0
       call legin(mode,l,nlat,m,w,pmn,km)
       ms = 1
       if (mode.eq.1) ms = 2
-      do 117 k=1,nt
-      do 117 i=1,late
-      do 117 np1=ms,nlat,2
+      do k=1,nt
+      do i=1,late
+      do np1=ms,nlat,2
       a(1,np1,k) = a(1,np1,k)+g(i,1,k)*pmn(np1,i,km)
-  117 continue
+      enddo
+      enddo
+      enddo
 c     compute coefficients for which b(m,n) is available
       do 118 mp1=2,lm1
       m = mp1-1
@@ -6041,12 +6236,14 @@ c     compute coefficients for which b(m,n) is available
       if (mode.eq.1) ms = mp1+1
 c     compute pmn for all i and n=m,...,nlat-1
       call legin(mode,l,nlat,m,w,pmn,km)
-      do 119 k=1,nt
-      do 119 i=1,late
-      do 119 np1=ms,nlat,2
+      do k=1,nt
+      do i=1,late
+      do np1=ms,nlat,2
       a(mp1,np1,k) = a(mp1,np1,k)+g(i,2*m,k)*pmn(np1,i,km)
       b(mp1,np1,k) = b(mp1,np1,k)+g(i,2*m+1,k)*pmn(np1,i,km)
-  119 continue
+      enddo
+      enddo
+      enddo
   118 continue
       if (nlon.eq.l+l-2) then
 c     compute coefficient a(l,np1) only
@@ -6054,11 +6251,13 @@ c     compute coefficient a(l,np1) only
       call legin(mode,l,nlat,m,w,pmn,km)
       ns = l
       if (mode.eq.1) ns = l+1
-      do 120 k=1,nt
-      do 120 i=1,late
-      do 120 np1=ns,nlat,2
+      do k=1,nt
+      do i=1,late
+      do np1=ns,nlat,2
       a(l,np1,k) = a(l,np1,k)+0.5*g(i,nlon,k)*pmn(np1,i,km)
-  120 continue
+      enddo
+      enddo
+      enddo
       end if
       end if
       return
@@ -6135,11 +6334,12 @@ c     in inner loops in analysis
       wts(i) = dwts(i)
   100 continue
 c     initialize p0n,p1n using double precision dnlfk,dnlft
-      do 101 np1=1,nlat
-      do 101 i=1,late
+      do np1=1,nlat
+      do i=1,late
       p0n(np1,i) = 0.0
       p1n(np1,i) = 0.0
-  101 continue
+      enddo
+      enddo
 c     compute m=n=0 legendre polynomials for all theta(i)
       np1 = 1
       n = 0
@@ -6168,9 +6368,9 @@ c     compute m=1 legendre polynomials for all n and theta(i)
   104 continue
 c     compute and store swarztrauber recursion coefficients
 c     for 2.le.m.le.n and 2.le.n.le.nlat in abel,bbel,cbel
-      do 107 n=2,nlat
+      do n=2,nlat
       mlim = min0(n,l)
-      do 107 m=2,mlim
+      do m=2,mlim
       imn = indx(m,n)
       if (n.ge.l) imn = imndx(m,n)
       abel(imn)=sqrt(float((2*n+1)*(m+n-2)*(m+n-3))/
@@ -6179,7 +6379,8 @@ c     for 2.le.m.le.n and 2.le.n.le.nlat in abel,bbel,cbel
      1               float(((2*n-3)*(m+n-1)*(m+n))))
       cbel(imn)=sqrt(float((n-m+1)*(n-m+2))/
      1               float(((n+m-1)*(n+m))))
-  107 continue
+      enddo
+      enddo
       return
       end
 c
@@ -6518,11 +6719,13 @@ c     set m+1 limit for b coefficient calculation
       lm1 = l
       if (nlon .eq. l+l-2) lm1 = l-1
 c     initialize to zero
-      do 100 k=1,nt
-      do 100 j=1,nlon
-      do 100 i=1,lat
+      do k=1,nt
+      do j=1,nlon
+      do i=1,lat
       g(i,j,k) = 0.0
-  100 continue
+      enddo
+      enddo
+      enddo
       if (mode.eq.0) then
 c     set first column in g
       m = 0
@@ -6530,17 +6733,19 @@ c     compute pmn for all i and n=m,...,l-1
       call legin(mode,l,nlat,m,w,pmn,km)
       do 101 k=1,nt
 c     n even
-      do 102 np1=1,nlat,2
-      do 102 i=1,late
+      do np1=1,nlat,2
+      do i=1,late
       g(i,1,k) = g(i,1,k)+a(1,np1,k)*pmn(np1,i,km)
-  102 continue
+      enddo
+      enddo
 c     n odd
       nl2 = nlat/2
-      do 103 np1=2,nlat,2
-      do 103 i=1,nl2
+      do np1=2,nlat,2
+      do i=1,nl2
       is = nlat-i+1
       g(is,1,k) = g(is,1,k)+a(1,np1,k)*pmn(np1,i,km)
-  103 continue
+      enddo
+      enddo
 c     restore m=0 coefficents (reverse implicit even/odd reduction)
       do 112 i=1,nl2
       is = nlat-i+1
@@ -6594,17 +6799,19 @@ c     set last column (using a only)
       call legin(mode,l,nlat,m,w,pmn,km)
       do 111 k=1,nt
 c     n-m even
-      do 131 np1=l,nlat,2
-      do 131 i=1,late
+      do np1=l,nlat,2
+      do i=1,late
       g(i,nlon,k) = g(i,nlon,k)+2.0*a(l,np1,k)*pmn(np1,i,km)
-  131 continue
+      enddo
+      enddo
       lp1 = l+1
 c     n-m odd
-      do 132 np1=lp1,nlat,2
-      do 132 i=1,nl2
+      do np1=lp1,nlat,2
+      do i=1,nl2
       is = nlat-i+1
       g(is,nlon,k) = g(is,nlon,k)+2.0*a(l,np1,k)*pmn(np1,i,km)
-  132 continue
+      enddo
+      enddo
       do 133 i=1,nl2
       is = nlat-i+1
       t1 = g(i,nlon,k)
@@ -6623,23 +6830,27 @@ c     set first column in g
       ms = m+meo
 c     compute pmn for all i and n=m,...,l-1
       call legin(mode,l,nlat,m,w,pmn,km)
-      do 113 k=1,nt
-      do 113 np1=ms,nlat,2
-      do 113 i=1,late
+      do k=1,nt
+      do np1=ms,nlat,2
+      do i=1,late
       g(i,1,k) = g(i,1,k)+a(1,np1,k)*pmn(np1,i,km)
-  113 continue
+      enddo
+      enddo
+      enddo
 c     sweep interior columns of g
       do 114 mp1=2,lm1
       m = mp1-1
       ms = m+meo
 c     compute pmn for all i and n=m,...,l-1
       call legin(mode,l,nlat,m,w,pmn,km)
-      do 115 k=1,nt
-      do 115 np1=ms,nlat,2
-      do 115 i=1,late
+      do k=1,nt
+      do np1=ms,nlat,2
+      do i=1,late
       g(i,2*m,k) = g(i,2*m,k)+a(mp1,np1,k)*pmn(np1,i,km)
       g(i,2*m+1,k) = g(i,2*m+1,k)+b(mp1,np1,k)*pmn(np1,i,km)
-  115 continue
+      enddo
+      enddo
+      enddo
   114 continue
       if (nlon.eq.l+l-2) then
 c     set last column
@@ -6647,11 +6858,13 @@ c     set last column
       call legin(mode,l,nlat,m,w,pmn,km)
       ns = l
       if (mode.eq.1) ns = l+1
-      do 116 k=1,nt
-      do 116 i=1,late
-      do 116 np1=ns,nlat,2
+      do k=1,nt
+      do i=1,late
+      do np1=ns,nlat,2
       g(i,nlon,k) = g(i,nlon,k)+2.0*a(l,np1,k)*pmn(np1,i,km)
-  116 continue
+      enddo
+      enddo
+      enddo
       end if
       end if
 c     do inverse fourier transform
@@ -6659,11 +6872,13 @@ c     do inverse fourier transform
       call hrfftb(lat,nlon,g(1,1,k),lat,wfft,pmn)
   120 continue
 c     scale output in gs
-      do 122 k=1,nt
-      do 122 j=1,nlon
-      do 122 i=1,lat
+      do k=1,nt
+      do j=1,nlon
+      do i=1,lat
       gs(i,j,k) = 0.5*g(i,j,k)
-  122 continue
+      enddo
+      enddo
+      enddo
       return
       end
       subroutine shsgci(nlat,nlon,wshsgc,lshsgc,dwork,ldwork,ierror)
@@ -6738,11 +6953,12 @@ c     in inner loops in analysis
       wts(i) = dwts(i)
   100 continue
 c     initialize p0n,p1n using double precision dnlfk,dnlft
-      do 101 np1=1,nlat
-      do 101 i=1,late
+      do np1=1,nlat
+      do i=1,late
       p0n(np1,i) = 0.0
       p1n(np1,i) = 0.0
-  101 continue
+      enddo
+      enddo
 c     compute m=n=0 legendre polynomials for all theta(i)
       np1 = 1
       n = 0
@@ -6771,9 +6987,9 @@ c     compute m=1 legendre polynomials for all n and theta(i)
   104 continue
 c     compute and store swarztrauber recursion coefficients
 c     for 2.le.m.le.n and 2.le.n.le.nlat in abel,bbel,cbel
-      do 107 n=2,nlat
+      do n=2,nlat
       mlim = min0(n,l)
-      do 107 m=2,mlim
+      do m=2,mlim
       imn = indx(m,n)
       if (n.ge.l) imn = imndx(m,n)
       abel(imn)=sqrt(float((2*n+1)*(m+n-2)*(m+n-3))/
@@ -6782,7 +6998,8 @@ c     for 2.le.m.le.n and 2.le.n.le.nlat in abel,bbel,cbel
      1               float(((2*n-3)*(m+n-1)*(m+n))))
       cbel(imn)=sqrt(float((n-m+1)*(n-m+2))/
      1               float(((n+m-1)*(n+m))))
-  107 continue
+      enddo
+      enddo
       return
       end
 c

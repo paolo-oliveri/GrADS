@@ -40,7 +40,7 @@ else
    LD_LIBRARY_PATH := $(shell cd $(GADDIR)/gex; pwd):$(LD_LIBRARY_PATH)
 endif
 
-SUBDIRS = gex gsf scripts
+SUBDIRS = gex gsf data shape
 
 #---------------------------  t a r g e t s   --------------------------------
 

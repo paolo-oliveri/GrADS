@@ -82,6 +82,10 @@ int main (int argc, char *argv[])  {
   gaint wrhstflg=0; 
   gadouble aspratio;
   char *logfile,*userhome=NULL;
+
+  #ifdef OPENGRADS
+      int gaudi (void *pcm);
+  #endif
   
   /*--- common block sets before gainit ---*/
   gcmn.batflg = 0;
@@ -295,9 +299,6 @@ int main (int argc, char *argv[])  {
     snprintf(gcmn.gxpopt,15,"%s",gxpopt);   /* copy user-specified GX printing plug-in name */
   else 
     snprintf(gcmn.gxpopt,15,"Cairo");       /* ... if not specified, default is Cairo       */
-
-  /* Paolo Oliveri e Davide Sacchetti, 20240202 */
-  upba = NULL;
 
   /* Read the user defined plug-in table */
   gaudpdef();  

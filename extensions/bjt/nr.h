@@ -191,6 +191,8 @@ void fred2(int n, double a, double b, double t[], double f[], double w[],
 	double (*g)(double), double (*ak)(double, double));
 double fredin(double x, int n, double a, double b, double t[], double f[], double w[],
 	double (*g)(double), double (*ak)(double, double));
+void free_matrix(double **m);
+void free_tensor(double ***m);
 void frenel(double x, double *s, double *c);
 void frprmn(double p[], int n, double ftol, int *iter, double *fret,
 	double (*func)(double []), void (*dfunc)(double [], double []));
@@ -453,6 +455,7 @@ void sor(double **a, double **b, double **c, double **d, double **e,
 	double **f, double **u, int jmax, double rjac);
 void sort(int n, double arr[]);
 void sort2(int n, double arr[], double brr[]);
+int sort2b(int n, double arr[], double brr[]);
 void sort3(int n, double ra[], double rb[], double rc[]);
 void spctrm(FILE *fp, double p[], int m, int k, int ovrlap);
 void spear(double data1[], double data2[], int n, double *d, double *zd,

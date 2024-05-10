@@ -116,7 +116,7 @@ static FILE *ifile = NULL;  /* input transfer file */
 static FILE *ofile = NULL;  /* output transfer file */
 
 static char pout[256];      /* Build error msgs here */
-static verbose = 0;         /* quiet by default */
+static int verbose = 0;         /* quiet by default */
 
 static char hand_shake[] = "\n<RC> 0 </RC>\n</IPC>\n";
 

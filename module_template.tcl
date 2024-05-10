@@ -20,14 +20,14 @@ set             version             GRADSVERSION
 
 prepend-path    PATH                GRADSPREFIX/bin
 
-append-path     LD_LIBRARY_PATH     GRADSPREFIX/lib:/usr/local/lib/
+append-path     LD_LIBRARY_PATH     GRADSPREFIX/lib
 
 setenv          GABDIR              GRADSPREFIX/bin/
 setenv          GAINC               GRADSPREFIX/include/
 setenv          GADDIR              GRADSPREFIX/share/grads
-setenv          GADSET              GRADSPREFIX/datasets
+setenv          GADSET              GRADSPREFIX/share/grads/datasets
 setenv          GASHP               GRADSPREFIX/share/grads/shapefiles
-setenv          GASCRP              "$env(HOME)/grads/scripts GRADSPREFIX/lib/grads/scripts/ GRADSPREFIX/lib/grads/scripts/arc"
+setenv          GASCRP              "$env(HOME)/grads/scripts GRADSPREFIX/share/grads/scripts $env(HOME)/davide-lib/grads/arc $env(HOME)/davide-lib/grads/lib"
 setenv          GAUDPT              GRADSPREFIX/share/grads/udpt
 setenv          GA2UDXT             GRADSPREFIX/share/grads/gex/udxt
 setenv          GAGPY               GRADSPREFIX/lib/libgradspy.so

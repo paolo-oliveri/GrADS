@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include "grads.h"
 #ifndef min
 #define min(a,b) ((a) <= (b) ? (a) : (b))
 #endif

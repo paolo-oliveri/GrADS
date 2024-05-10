@@ -57,6 +57,7 @@ CPAN), there are targets in the gex.mk fragment for these:
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
+#include <string.h>
 #include <math.h>
 #include "grads.h"
 

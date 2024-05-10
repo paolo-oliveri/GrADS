@@ -217,6 +217,8 @@ typedef struct latsgribfile {
   prototypes
 ---*/
 
+void latsgribmap (char *name, int notaucheck);
+
 int lats_pds_set(latsFile *file, latsVar *var, 
 		 int levindex, int timeindex, latsCompTime time, 
 		 int fhour, int fmin,
