@@ -11,8 +11,8 @@ AC_DEFUN([GA_CHECK_LIBSX],
 
   GA_CHECK_XAW([ga_xaw_found='yes'],[ga_xaw_found='no'])
 
-  LDFLAGS="$LDFLAGS -L/usr/local/lib $X_LIBS"
-  CFLAGS="$CFLAGS -I/usr/local/include/libsx"
+  LDFLAGS="$LDFLAGS $X_LIBS"
+  CFLAGS="$CFLAGS"
   ga_use_libsx='no'
   ga_libsx_header='no'
   ga_libsx_freq_header='no'

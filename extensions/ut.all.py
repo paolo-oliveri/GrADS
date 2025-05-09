@@ -27,7 +27,7 @@ import ipc
 # import lats  # seems to work, tests do not work because missing dataset
 import mf
 import orb
-import tle  # works, test do not work
+import tle
 # import shape  # DEPRECATED
 # import shfilt  # works, test do not work
 

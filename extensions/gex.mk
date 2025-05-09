@@ -297,7 +297,7 @@ clean distclean:
 	cpp -ansi -DPOD $*.c | pod2wiki --style mediawiki > $*.wiki
 
 %.gex : %.o $(EXTRAS)
-	$(LD) $(LDFLAGS) -o $@ $*.o $(EXTRAS) $(LIBS)
+	$(LD) -o $@ $*.o $(EXTRAS) $(LIBS) $(LDFLAGS)
 
 %.x : %.o
 	$(FC) $(FFLAGS) -o $@ $*.f

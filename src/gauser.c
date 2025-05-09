@@ -326,7 +326,8 @@ FILE *pdefid=NULL;
     gxfrme (1);
     if (reinit)
       gaprnt (1,"All GrADS attributes have been reinitialized\n");
-    else gaprnt (1,"Most GrADS attributes have been reset\n");
+    else if (mfcmn.warnflg > 0)
+      gaprnt (1,"Most GrADS attributes have been reset\n");
     goto retrn;
   }
 
@@ -7707,7 +7708,7 @@ gaint rc;
     gacmd ("set e 1",pcm,0);
   }
 
-  if (pfi->ppflag) {
+  if (pfi->ppflag && mfcmn.warnflg > 0) {
     snprintf(pout,1255,"Notice: Implied interpolation for file %s\n",name);
     gaprnt (1,pout);
     gaprnt (1," Interpolation will be performed on any data ");

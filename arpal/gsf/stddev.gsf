@@ -1,0 +1,15 @@
+#-- torna la standard deviation di un campo
+#-- se oltre al campo passo 4 definizioni (tipo x=1 ...) fa una amean
+#-- se ne passo solo due fa una mean
+#-- se non ne passo nessuno, 'global' o 'g' lo fa su tutto il dominio
+#-- dvd e paolo 2024/10
+function stddev(var,i1def,i2def,j1def,j2def)
+ if(i1def='i1def' | i1def='global' | i1def='g')
+  return 'sqrt(amean(pow('var',2),global)-pow(amean('var',global),2))'
+ endif
+ if(j1def='j1def' & j2def='j2def')
+  res='sqrt(mean(pow('var',2),'i1def','i2def')-pow(mean('var','i1def','i2def'),2))'
+ else
+  res='sqrt(amean(pow('var',2),'i1def','i2def','j1def','j2def')-pow(amean('var','i1def','i2def','j1def','j2def'),2))'
+ endif
+return res

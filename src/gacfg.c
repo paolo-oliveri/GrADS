@@ -141,7 +141,7 @@ snprintf(cmd,255,"Config: v%s",GRADS_VERSION);
 #endif
 
 #if GRIB2==1
-   snprintf(cmd,255,"  +  GRIB2 interface ENABLED  %s \n",G2_VERSION);
+   snprintf(cmd,255,"  +  GRIB2 interface ENABLED  %s \n",G2C_VERSION);
    gaprnt(verbose,cmd);
 #else 
    gaprnt(verbose,"  -  GRIB2 interface DISABLED\n");

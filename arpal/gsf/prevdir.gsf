@@ -260,6 +260,7 @@ function getSecFreq(exprx,expry,nsec,opt)
   dir.i=l1+width/2
 *  if(_INFO);say 'INFO - nel='nvalid.i' sector='i' dir='dir.i;endif
  endwhile
+ 'undefine ddd'
 #-- trasformo il vettore in stringa
  string=''
  i=0;while(i<=nsec);i=i+1

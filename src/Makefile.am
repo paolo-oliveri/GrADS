@@ -63,7 +63,6 @@ grads_SOURCES =	grads.c  gxsubs.c gxmeta.c  gxchpl.c gxcntr.c gxstrm.c gxdb.c \
 EXTRA_grads_SOURCES = gagmap.c gagui.c gsgui.c dodstn.c \
                       gxprintGD.c gxGD.c gxX11.c \
                       gxprint.c gxC.c gxX.c gxdummy.c 
-#                      gxprint.c gxC.c gxX.c gxdummy.c 
 
 
 ##---Header files---------------------------------------------------------------------
@@ -90,7 +89,6 @@ DISTCLEANFILES = buildinfo.h config.h
 supp_include_dir	= $(SUPPLIBS)/include
 supp_lib_dir		= $(SUPPLIBS)/lib
 LDADD			= $(geotiff_ldflags) $(shp_ldflags) $(gd_ldflags)
-# -L$(supp_lib_dir)
 
 common_ldadd            = $(LDADD) $(host_ldadd) 
 X11_ldadd               = $(X_LIBS) $(X_PRE_LIBS) -lX11 -lXext $(X_EXTRA_LIBS)
@@ -99,7 +97,6 @@ X11_ldadd               = $(X_LIBS) $(X_PRE_LIBS) -lX11 -lXext $(X_EXTRA_LIBS)
 AM_CPPFLAGS		= -DOPENGRADS -I. $(gui_inc) $(nc_inc) \
 			  $(hdf_inc) $(hdf5_inc) $(geotiff_inc) $(shp_inc) $(gadap_inc) \
                           $(X_CFLAGS) $(XAW_CFLAGS) $(HDF4_CFLAGS)
-# -I$(supp_include_dir)
 
 ## libraries needed
 grads_LDADD	      = $(common_ldadd) $(readline_libs) $(grib2_libs) \
@@ -109,14 +106,12 @@ grads_LDADD	      = $(common_ldadd) $(readline_libs) $(grib2_libs) \
 # print with GD
 if USEGD
 libgxpGD_la_CPPFLAGS = -I.
-# -I$(SUPPLIBS)/include
 libgxpGD_la_LIBADD = $(LDADD) $(gd_libs)
 libgxpGD_la_LDFLAGS = -version-info $(LIBGX_VERSION)
 endif
 
 # display X11 
 libgxdX11_la_CPPFLAGS = -I.
-# -I$(SUPPLIBS)/include
 libgxdX11_la_LIBADD = $(X11_ldadd)
 libgxdX11_la_LDFLAGS = -version-info $(LIBGX_VERSION)
  
@@ -144,7 +139,7 @@ libgradspy_la_SOURCES  = grads.c gxsubs.c gxmeta.c  gxchpl.c gxcntr.c gxstrm.c g
 		gxwmap.c gxshad.c gxshad2.c gaexpr.c gafunc.c gautil.c gagx.c \
 		gscrpt.c gamach.c gatxt.c   galloc.c gaddes.c gacfg.c  gaio.c \
                 gauser.c gasdf.c  bufrstn.c gabufr.c gabufrtbl.c \
-                $(src_gui) $(src_gadap) $(src_udx) 
+                $(src_gui) $(src_gadap) $(src_udx)
 
 ## this object file needs to be recompiled for gradspy with the SHRDOBJ flag set 
 libgradspy_la-grads.o: $(srcdir)/grads.c
@@ -154,7 +149,6 @@ libgradspy_la_CFLAGS   = -DOPENGRADS -DSHRDOBJ
 libgradspy_la_CPPFLAGS = -I. $(gui_inc) $(geotiff_inc) \
                          $(nc_inc) $(hdf_inc) $(hdf5_inc) \
                          $(shp_inc) $(gadap_inc) $(X_CFLAGS) $(XAW_CFLAGS)
-# -I$(SUPPLIBS)/include
 libgradspy_la_LIBADD   = $(common_ldadd) $(readline_libs) $(grib2_libs) \
 			 $(hdf_libs) $(hdf5_libs) $(nc_libs) $(geotiff_libs) \
 			 $(shp_libs) $(gadap_libs) $(gui_libs) 
