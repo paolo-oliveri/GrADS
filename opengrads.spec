@@ -12,7 +12,7 @@
 #
 # Build example:
 # 
-#     rpmbuild -ba grads.spec --define "__install_path /opt/grads" --define "module_dir /usr/share/Modules/modulefiles"
+#     rpmbuild -ba opengrads.spec --define "__install_path /opt/grads" --define "module_dir /usr/share/Modules/modulefiles"
 # 
 # 20251120 Paolo Oliveri
 #
