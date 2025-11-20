@@ -32,9 +32,9 @@ if USEGADAP
 src_gadap = dodstn.c
 endif
 
-# if OPENGRADS
+if OPENGRADS
 src_udx = gaudx.c
-# endif
+endif
 
 if USEGUI
 src_gui = gagui.c gsgui.c
@@ -94,7 +94,7 @@ common_ldadd            = $(LDADD) $(host_ldadd)
 X11_ldadd               = $(X_LIBS) $(X_PRE_LIBS) -lX11 -lXext $(X_EXTRA_LIBS)
 
 
-AM_CPPFLAGS		= -DOPENGRADS -I. $(gui_inc) $(nc_inc) \
+AM_CPPFLAGS		= $(OPENGRADS_CFLAGS) -I. $(gui_inc) $(nc_inc) \
 			  $(hdf_inc) $(hdf5_inc) $(geotiff_inc) $(shp_inc) $(gadap_inc) \
                           $(X_CFLAGS) $(XAW_CFLAGS) $(HDF4_CFLAGS)
 
@@ -114,7 +114,7 @@ endif
 libgxdX11_la_CPPFLAGS = -I.
 libgxdX11_la_LIBADD = $(X11_ldadd)
 libgxdX11_la_LDFLAGS = -version-info $(LIBGX_VERSION)
- 
+
 # print with Cairo
 libgxpCairo_la_CPPFLAGS = -I. $(cairo_inc)
 #-I$(SUPPLIBS)/include -I$(SUPPLIBS)/include/cairo -I$(SUPPLIBS)/include/freetype2
@@ -145,7 +145,7 @@ libgradspy_la_SOURCES  = grads.c gxsubs.c gxmeta.c  gxchpl.c gxcntr.c gxstrm.c g
 libgradspy_la-grads.o: $(srcdir)/grads.c
 	$(COMPILE) -DSHRDOBJ -o libgradspy_la-grads.lo -c $(srcdir)/grads.c
 
-libgradspy_la_CFLAGS   = -DOPENGRADS -DSHRDOBJ
+libgradspy_la_CFLAGS   = $(OPENGRADS_CFLAGS) -DSHRDOBJ
 libgradspy_la_CPPFLAGS = -I. $(gui_inc) $(geotiff_inc) \
                          $(nc_inc) $(hdf_inc) $(hdf5_inc) \
                          $(shp_inc) $(gadap_inc) $(X_CFLAGS) $(XAW_CFLAGS)

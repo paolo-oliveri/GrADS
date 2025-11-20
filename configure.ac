@@ -9,7 +9,7 @@ dnl  See acinclude.m4 for definitions of the GA_xxx macros
 AC_PREREQ(2.52) 
 
 # The "master" version string that will appear in all code, etc.
-AC_INIT(GrADS, [2.2.3], [jennifer.m.adams@nasa.gov])
+AC_INIT(GrADS, [2.2.4], [jennifer.m.adams@nasa.gov, paul@oliveri.info])
 
 # Supporting scripts are in etc/ 
 AC_CONFIG_AUX_DIR(etc)
@@ -888,6 +888,11 @@ else
   AC_SUBST(gui_libs)
 fi
 
+AC_ARG_ENABLE([opengrads],
+  AS_HELP_STRING([--enable-opengrads], [Enable OpenGrADS support]),
+  [opengrads=$enableval],
+  [opengrads=no]
+)
 
 # ----------------------------------------------------
 # Send test results to makefile and config.h
@@ -897,15 +902,24 @@ fi
 AC_DEFINE(GRADS_VERSION, "AC_PACKAGE_VERSION", [GrADS version])
 
 # These are used to add the necessary source files to Makefile targets
-AM_CONDITIONAL(READLINE, [ test "$use_readline"  = "yes" ] )
-AM_CONDITIONAL(USEGUI,   [ test "$use_gui"  = "yes" ] )
-AM_CONDITIONAL(GEOTIFF,  [ test "$use_geotiff"  = "yes" ] )
-AM_CONDITIONAL(USESHP,   [ test "$use_shp"  = "yes" ] )
-AM_CONDITIONAL(USEGADAP, [ test "$use_gadap" = "yes" ] )
-AM_CONDITIONAL(USEDAP,   [ test "$use_dap" = "yes" ] )
-AM_CONDITIONAL(USEHDF,   [ test "$use_hdf" = "yes" ] )
-AM_CONDITIONAL(USEGD,    [ test "$use_gd" = "yes" ] )
-AM_CONDITIONAL(USECAIRO, [ test "$use_cairo" = "yes" ] )
+AM_CONDITIONAL(READLINE,  [ test "$use_readline"  = "yes" ] )
+AM_CONDITIONAL(USEGUI,    [ test "$use_gui"  = "yes" ] )
+AM_CONDITIONAL(GEOTIFF,   [ test "$use_geotiff"  = "yes" ] )
+AM_CONDITIONAL(USESHP,    [ test "$use_shp"  = "yes" ] )
+AM_CONDITIONAL(USEGADAP,  [ test "$use_gadap" = "yes" ] )
+AM_CONDITIONAL(USEDAP,    [ test "$use_dap" = "yes" ] )
+AM_CONDITIONAL(USEHDF,    [ test "$use_hdf" = "yes" ] )
+AM_CONDITIONAL(USEGD,     [ test "$use_gd" = "yes" ] )
+AM_CONDITIONAL(USECAIRO,  [ test "$use_cairo" = "yes" ] )
+AM_CONDITIONAL(OPENGRADS, [test "$opengrads" = "yes"])
+
+if test "$opengrads" = "yes"; then
+  AC_DEFINE([OPENGRADS], [1], [Enable OpenGrADS features])
+  OPENGRADS_CFLAGS="-DOPENGRADS"
+else
+  OPENGRADS_CFLAGS=""
+fi
+AC_SUBST([OPENGRADS_CFLAGS])
 
 # Host specific linker flags
 AC_SUBST(host_ldadd)
@@ -940,6 +954,11 @@ AC_OUTPUT
    echo "  |                               |"
    echo "  |  GrADS will be built with:    |"
    echo "  |                               |"
+if test "$opengrads" = "yes"; then
+   echo "  |  + OpenGrADS enabled          |"
+else
+   echo "  |  - OpenGrADS disabled         |"
+fi
 if test "$use_gui" = "yes" ; then
    echo "  |  + GUI enabled                |"
 else
