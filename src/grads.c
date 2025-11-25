@@ -78,7 +78,7 @@ int main (int argc, char *argv[])  {
   gaint txtcs=-2;
   gaint ipcflg = 0; /* for IPC friendly interaction via pipes */
   char *icmd,*arg,*rc1;
-  void gasigcpu() ;
+  void gasigcpu(int) ;
   gaint wrhstflg=0; 
   gadouble aspratio;
   char *logfile,*userhome=NULL;

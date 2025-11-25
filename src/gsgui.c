@@ -73,6 +73,8 @@
 #define DEBUGGUI        20
 #define CHDIR           21
 
+int Custom_GUI ( char *fname );
+
 /* Widget function table */
 struct Func_Table {
     char *name;

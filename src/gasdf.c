@@ -3070,7 +3070,7 @@ nc_type type;
                 for (j=0; j<sz; j++) cval[j] = strval[0][j];
 		cval[sz]='\0';
                 nc_free_string(attlen, strval);
-		gree(strval);
+		gree(strval, NULL);
 	      }
 	      break;
 	    case (NC_SHORT):

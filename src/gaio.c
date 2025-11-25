@@ -4327,7 +4327,7 @@ size_t sz,asize;
                 for (j=0; j<sz; j++) cattr_val[j] = strattr_val[0][j];
                 cattr_val[sz]='\0';
                 nc_free_string(asize, strattr_val);
-                gree(strattr_val);
+                gree(strattr_val, NULL);
                 gaprnt(2,abbrv); 
                 gaprnt(2," String ");
                 gaprnt(2,attr_name); 
