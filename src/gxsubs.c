@@ -27,7 +27,7 @@
 #include "gx.h"
 
 char *gaqupb (char *, gaint);
-void gree ();
+void gree(void *mem, char *ch);
 
 /* The following variables are local to this file, and are used by
    all the routines in the file.    */

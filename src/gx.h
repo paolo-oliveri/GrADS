@@ -561,7 +561,7 @@ int  gxlamc (struct mapprj *);
 void gxlamcp (gadouble, gadouble, gadouble *, gadouble *);
 void gxlamcb (gadouble, gadouble, gadouble *, gadouble *);
 gadouble *gxmpoly(gadouble *xy, gaint cnt, gadouble llinc, gaint *newcnt); 
-void gree();
+void gree (void *mem, char *ch);
 
 
 /* routines in gxX.c */

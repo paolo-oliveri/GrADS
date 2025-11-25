@@ -8668,10 +8668,10 @@ SHPHandle gaopshp(char *shparg) {
     *(fname+len)='\0';
     /* try to open new filename */
     if ((id=SHPOpen(fname,"rb"))!=NULL) {
-      gree(fname);                    
+      gree(fname, NULL);                    
       return(id);                                   /* success! */
     } 
-    gree(fname);                                    /* release filename */
+    gree(fname, NULL);                              /* release filename */
     sdir+=ch1;                                      /* advance to delimiter */
     if (*(sdir)=='\0') break;                       /* end of GASHP */
     else sdir++;                                    /* advance past delimiter */
@@ -8729,10 +8729,10 @@ DBFHandle gaopdbf(char *shparg) {
     *(fname+len)='\0';
     /* try to open new filename */
     if ((id=DBFOpen(fname,"rb"))!=NULL) {
-      gree(fname);                    
+      gree(fname, NULL);                    
       return(id);                                   /* success! */
     } 
-    gree(fname);                                    /* release filename */
+    gree(fname,NULL);                                    /* release filename */
     sdir+=ch1;                                      /* advance to delimiter */
     if (*(sdir)=='\0') break;                       /* end of GASHP */
     else sdir++;                                    /* advance past delimiter */
