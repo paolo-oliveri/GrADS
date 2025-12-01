@@ -18,7 +18,7 @@
 #
 Name:           grads
 Version:        2.2.4
-Release:        1%{?dist}
+Release:        0%{?dist}
 Summary:        Tool for easy acces, manipulation, and visualization of data
 
 Group:          Applications/Engineering
@@ -57,8 +57,6 @@ The Grid Analysis and Display System (GrADS) is a tool for fast and easy access,
 %setup -q
 
 %build
-# Fix for Fedora 42+ GCC
-# export CFLAGS="$CFLAGS -std=gnu17"
 
 autoreconf -fi
 
@@ -137,7 +135,7 @@ cd -
 cat udpt | sed -e 's|GRADSPREFIX|%{_prefix}|g' > $RPM_BUILD_ROOT%{_datadir}/%{name}/udpt
 
 # if module_dir is empty install in global mode
-%{!?module_dir: %define module_dir "" }
+%{!?module_dir: %define module_dir %{nil} }
 
 %if "%{module_dir}" != ""
     # Installing GrADS environment module
@@ -184,14 +182,6 @@ cat udpt | sed -e 's|GRADSPREFIX|%{_prefix}|g' > $RPM_BUILD_ROOT%{_datadir}/%{na
 %else
     /etc/profile.d/grads.sh
 %endif
-
-# Legacy
-%{_libdir}/libgradspy.la
-%{_libdir}/libgxdCairo.la
-%{_libdir}/libgxdummy.la
-%{_libdir}/libgxdX11.la
-%{_libdir}/libgxpCairo.la
-%{_libdir}/libgxpGD.la
 
 %changelog
 * Wed Nov 19 2025 Paolo Oliveri <paul@oliveri.info> - 2.2.4-0

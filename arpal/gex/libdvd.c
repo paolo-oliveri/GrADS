@@ -738,8 +738,8 @@ err:
   if (x2!=NULL) gree(x2,"f401");
   if (y1!=NULL) gree(y1,"f402");
   if (y2!=NULL) gree(y2,"f403");
-  if (gr1!=NULL) gree (gr1);
-  if (gr1u!=NULL) gree (gr1u);
+  if (gr1!=NULL) gree (gr1, NULL);
+  if (gr1u!=NULL) gree (gr1u, NULL);
   if (error) 
     return 1;
   else 

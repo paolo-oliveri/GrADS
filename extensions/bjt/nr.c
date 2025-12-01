@@ -333,7 +333,7 @@ int svdcmpb(double **a, int m, int n, double w[], double **v)
 {
 	int flag,i,its,j,jj,k,l,nm;
 	double anorm,c,f,g,h,s,scale,x,y,z,*rv1;
-	int true=1, false=0;
+	int ttrue=1, ffalse=0;
 
 	rv1=vector(n);
 	g=scale=anorm=0.0;
@@ -416,11 +416,11 @@ int svdcmpb(double **a, int m, int n, double w[], double **v)
 	}
 	for (k=n-1;k>=0;k--) {
 		for (its=0;its<30;its++) {
-			flag=true;
+			flag=ttrue;
 			for (l=k;l>=0;l--) {
 				nm=l-1;
 				if (fabs(rv1[l])+anorm == anorm) {
-					flag=false;
+					flag=ffalse;
 					break;
 				}
 				if (fabs(w[nm])+anorm == anorm) break;
