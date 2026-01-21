@@ -27,7 +27,7 @@ setenv          GAINC               GRADSPREFIX/include/
 setenv          GADDIR              GRADSPREFIX/share/grads
 setenv          GADSET              GRADSPREFIX/share/grads/datasets
 setenv          GASHP               GRADSPREFIX/share/grads/shapefiles
-setenv          GASCRP              "$env(HOME)/grads/scripts GRADSPREFIX/share/grads/scripts $env(HOME)/davide-lib/grads/arc $env(HOME)/davide-lib/grads/lib"
+setenv          GASCRP              "$env(HOME)/grads/scripts GRADSPREFIX/share/grads/scripts"
 setenv          GAUDPT              GRADSPREFIX/share/grads/udpt
 setenv          GA2UDXT             GRADSPREFIX/share/grads/gex/udxt
 setenv          GAGPY               GRADSPREFIX/lib/libgradspy.so

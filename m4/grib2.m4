@@ -4,18 +4,17 @@ AC_DEFUN([GA_CHECK_LIB_GRIB2],
 [
   ga_check_grib2="no"
   AC_CHECK_HEADER(grib2.h,
-  [ AC_CHECK_LIB(g2c, main, [
-    AC_CHECK_LIB([png], [main], [
-    AC_CHECK_LIB([z], [compress], [
-    AC_CHECK_LIB([jpeg], [main], [
-    AC_CHECK_LIB([jasper], [main], [
+  [ AC_CHECK_LIB([jasper], [main], G2_LIBS="$G2_LIBS -ljasper")
+    AC_CHECK_LIB([png], [main], G2_LIBS="$G2_LIBS -lpng")
+    AC_CHECK_LIB([z], [main], G2_LIBS="$G2_LIBS -lz")
+    AC_CHECK_LIB([jpeg], [main], G2_LIBS="$G2_LIBS -ljpeg")
+    ac_save_LIBS="$LIBS"
+    LIBS="$G2_LIBS $LIBS"
+    AC_CHECK_LIB(g2c, main, [
       ga_check_grib2="yes"
-      G2_LIBS="-lg2c -ljasper -lpng -lz"
+      G2_LIBS="-lg2c $G2_LIBS"
     ])
-    ])
-    ])
-    ])
-    ])
+    LIBS="$ac_save_LIBS"
   ])
   if test $ga_check_grib2 = "yes" ; then
      m4_if([$1], [], [:], [$1])

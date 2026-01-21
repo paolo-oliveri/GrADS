@@ -4,9 +4,9 @@ dnl args :             action-if-yes, action-if-no
 AC_DEFUN([GA_CHECK_LIB_GD],
 [
   ga_check_gd="no"
-  GD_LIBS=
-  GD_CFLAGS=
-  GD_LDFLAGS=
+#  GD_LIBS=
+#  GD_CFLAGS=
+#  GD_LDFLAGS=
 
   ac_save_LIBS="$LIBS"
   ac_save_CPPFLAGS="$CPPFLAGS"
