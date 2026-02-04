@@ -27,7 +27,7 @@ License:        GPLv2 and MIT
 URL:            http://http://cola.gmu.edu/grads
 
 # GrADS sources
-Source0:        https://github.com/paolo-oliveri/GrADS/archive/refs/tags/v2.2.4.tar.gz
+Source0:        https://github.com/paolo-oliveri/GrADS/archive/refs/tags/v%{version}.tar.gz
 
 BuildRequires:  gcc gcc-c++ gcc-gfortran automake autoconf libtool make which pcre-devel
 BuildRequires:  jasper-devel cairo-devel

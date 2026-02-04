@@ -13,7 +13,12 @@ export GAINC="GRADSPREFIX/include/"
 export GADDIR="GRADSPREFIX/share/grads"
 export GADSET="GRADSPREFIX/share/grads/datasets"
 export GASHP="GRADSPREFIX/share/grads/shapefiles"
-export GASCRP="GRADSPREFIX/share/grads/scripts ${HOME}/grads/scripts"
 export GAUDPT="GRADSPREFIX/share/grads/udpt"
 export GA2UDXT="GRADSPREFIX/share/grads/gex/udxt"
 export GAGPY="GRADSPREFIX/lib/libgradspy.so"
+
+if [ -n "$GASCRP" ]; then
+    export GASCRP="GRADSPREFIX/share/grads/scripts ${HOME}/grads/scripts $GASCRP"
+else
+    export GASCRP="GRADSPREFIX/share/grads/scripts ${HOME}/grads/scripts"
+fi
